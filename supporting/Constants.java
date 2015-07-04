@@ -28,6 +28,7 @@ public class Constants {
     public static final String UNKNOWN = "unknown";
     public static final String NOT_IMPLEMENTED = "Not yet implemented.";
     public static final String NOT_INITIALIZED = "Not initialized";
+    public static final String NONE = "None";
     
     public static final String LOG_DIR = "log/";
     public static final String LOGICAL_BASE_DIR = "base";
