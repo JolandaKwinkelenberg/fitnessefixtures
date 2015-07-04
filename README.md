@@ -1,6 +1,8 @@
 # fitnessefixtures
 The FitNesse Fixtures in this repository are created as part of an overall solution for automating the test cycle.
 Visit http://fitnesse.solutions for more info and for downloads of compiled versions.
+v2.3 fixture classes are available for download on http://consagservices.net/SpecificationByExample/downloads/v2.3
+download the zip files and unzip them in <installdir>/fixtures/bin.
 
 ##Readme for Windows
 The installation readme for Windows can be found on our website: 
