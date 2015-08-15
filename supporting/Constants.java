@@ -1,7 +1,7 @@
 /**
  * This purpose of this fixture is to store all the generic constants centrally.
  * @author Edward Crain, Jac. Beekers
- * @version 31 May 2015
+ * @version 13 July 2015
  */
 package supporting;
 
@@ -29,7 +29,24 @@ public class Constants {
     public static final String NOT_IMPLEMENTED = "Not yet implemented.";
     public static final String NOT_INITIALIZED = "Not initialized";
     public static final String NONE = "None";
+    public static final String LATEST = "LATEST";
+    public static final String FITCONVERTDT = "FITCONVERTDT";
+    public static final String SRC = "SRC";
+    public static final String TGT ="TGT";
+    public static final String NOPRIMKEY ="NoPrimaryKey";
+    public static final String NOT_COMPARED ="Not compared";
+    public static final String NO_DIFFERENCES ="No differences";
+    public static final String FILTER_INDICATOR="filter";
+    public static final String OPERATOR_EQUALS ="=";
+    public static final String PARAM_DELIMITER ="Delimiter=";
     
+    public static final String INCOMING ="incoming";
+    public static final String OUTGOING ="outgoing";
+    public static final String TESTDATA ="testdata";
+    public static final String DEPLOYMENT="deployment";
+    public static final String TEMP ="temp";
+    public static final String ENVIRONMENT ="Environment";
+
     public static final String LOG_DIR = "log/";
     public static final String LOGICAL_BASE_DIR = "base";
     public static final String LOGICAL_SCRIPT_DIR ="scripts";
@@ -52,6 +69,9 @@ public class Constants {
     public static final String LOG_FILE_DELIMITER = ";";
     public static final String INPUT_FILE_DELIMITER = ":";
     public static final String QUERY_DELIMITER = ",";
+    public static final String COLUMN_DELIMITER =",";
+    public static final String FIELD_DELIMITER =";";
+    public static final String APPPROP_DELIMITER =".";
     
     // Location of config files
     public static final String CONFIGDIRECTORY="config/";
@@ -69,6 +89,7 @@ public class Constants {
     public static final String WSH_PROPERTIES =CONFIGDIRECTORY + "wsh.properties";
     public static final String DAC_PROPERTIES =CONFIGDIRECTORY + "dac.properties";
     public static final String ENVIRONMENT_PROPERTIES =CONFIGDIRECTORY + "environment.properties";
+    public static final String INFA_PROCESS_PROPERTIES =CONFIGDIRECTORY + "infaprocess.properties";
 
     public static final String SIEBEL_USER ="Usr";
     public static final String SIEBEL_PWD ="Pwd";
@@ -150,7 +171,35 @@ public class Constants {
     
     // Scheduler constants
     public static final String SCHEDULER_PROPERTIES = CONFIGDIRECTORY + "scheduler_client.properties";
+    public static final int MISFIRE_INSTRUCTION_FIRE_NOW = 1;
+    public static final int MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT = 2;
+    public static final int MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT = 3;
+    public static final int MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT = 4;
+    public static final int MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT = 5;
+    public static final List<String> QUARTZ_MISFIRE_INSTRUCTIONS = Collections.unmodifiableList(Arrays.asList(
+	"0 is unknown"
+	,"1 - MISFIRE_INSTRUCTION_FIRE_NOW"
+	,"2 - MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT"
+	,"3 - MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT"
+	,"4 - MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT"
+	,"5 - MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT"
+	));
     
+    // Scheduler Time units
+    public static final String SCHEDULER_HOUR = "hour";
+    public static final String SCHEDULER_DAY ="day";
+    public static final String SCHEDULER_WEEK ="week";
+    public static final String SCHEDULER_MONTH ="month";
+    public static final String SCHEDULER_YEAR = "year";
+    public static final List<String> schedulerUnits = Collections.unmodifiableList(Arrays.asList(SCHEDULER_HOUR
+                                                                                                 ,SCHEDULER_DAY
+                                                                                                 ,SCHEDULER_WEEK
+                                                                                                 ));
+    public static final List<Integer> schedulerUnitInHours = Collections.unmodifiableList(Arrays.asList(1
+                                                                                                 ,24
+                                                                                                 ,7*24
+                                                                                                 ));
+
     // Messages
     public static final String ENGLISH = "ENU";
     public static final String DUTCH = "NLD";
@@ -170,5 +219,8 @@ public class Constants {
     //Scripts
     public static final String RUNIDQPROFILE_SCRIPT="runidqprofile.sh";
     
+    //Informatica Process defaults
+    public static final String DEFAULT_ABORTONERROR=YES;
+    public static final String PROP_ABORTONERROR="AbortOnError";
                                                   
 }
