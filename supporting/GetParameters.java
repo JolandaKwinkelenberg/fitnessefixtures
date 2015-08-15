@@ -4,19 +4,9 @@ import java.io.*;
 
 import java.util.Properties;
 
-import supporting.Constants;
-
 public class GetParameters {
-  private static String sNotFound = Constants.NOT_FOUND;
   private static String curFields[];
   private static String delimiter = Constants.INPUT_FILE_DELIMITER;
-  private static String sIncoming ="incoming";
-  private static String sOutgoing ="outgoing";
-  private static String sTestdata ="testdata";
-  private static String sDeployment="deployment";
-  private static String sTemp ="temp";
-  private static String sEnvironment ="Environment";
-  private static String sLogDir ="logdir";
 
 //Static values for indexes in Database parameter files
   private static int iDatabaseType=1;
@@ -45,7 +35,7 @@ public class GetParameters {
       String logicalWSH ="Unknown";          
       // first find the app in appwsh      
       logicalWSH =FindParameter(Constants.APPWSH_PROPERTIES, searchFor, iWshUrl);
-      if (sNotFound.equals(logicalWSH)) {
+      if (Constants.NOT_FOUND.equals(logicalWSH)) {
     	  return "application >" + searchFor + "< not found in >" + Constants.APPWSH_PROPERTIES +"<."; 
       }
       // now go look for the wsh
@@ -54,12 +44,12 @@ public class GetParameters {
         
   public static String GetEnvironment() {
 	  //GetEnvironment: Determine which environment fitnesse is running
-	  return FindParameter(Constants.ENVIRONMENT_PROPERTIES, sEnvironment);
+	  return FindParameter(Constants.ENVIRONMENT_PROPERTIES, Constants.ENVIRONMENT);
   }
 
   public static String GetLogDir() {
 	  //GetEnvironment: Determine which environment fitnesse is running
-	  return FindParameter(Constants.FILEOPERATION_PROPERTIES, sLogDir);
+	  return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.LOG_DIR);
   }
 
   public static String GetRootDir(String area){
@@ -69,27 +59,31 @@ public class GetParameters {
   
   public static String GetIncoming() {
 	  //Get info for File Operations and determine Incoming directory
-      return FindParameter(Constants.FILEOPERATION_PROPERTIES, sIncoming);
+      return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.INCOMING, 1);
     }
   
   public static  String GetOutgoing() {
 	  //Get info for File Operations and determine Outgoing directory
-	  return FindParameter(Constants.FILEOPERATION_PROPERTIES, sOutgoing);
+	  return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.OUTGOING, 1);
     }
 
   public static String GetTemp() {
   	  //Get info for File Operations and determine temporary directory
-	  return FindParameter(Constants.FILEOPERATION_PROPERTIES, sTemp);
+	  return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.TEMP, 1);
   }
 
   public static String GetTestdata() {
 	  //Get info for File Operations and determine base directory for test data
-	  return FindParameter(Constants.FILEOPERATION_PROPERTIES, sTestdata);
+	  return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.TESTDATA, 1);
   }
 
   public static String GetDeployment() {
-      return FindParameter(Constants.FILEOPERATION_PROPERTIES, sDeployment);
+      return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.DEPLOYMENT, 1);
     }
+
+  public static String FileOperationGetEntry(String key) {
+      return FindParameter(Constants.FILEOPERATION_PROPERTIES, key, 1);
+  }
 
   /**
    * ==================================================================================
@@ -188,7 +182,7 @@ public class GetParameters {
     String sSearchFor = pSearchFor;
     String sFileName = pFileName;
     boolean bFound;
-    String result =sNotFound;
+    String result =Constants.NOT_FOUND;
     
     try {
     // Open FitNesse parameter file
@@ -199,6 +193,7 @@ public class GetParameters {
     	bFound = false;
     	while ( !bFound && ((strLine = br.readLine()) != null)) {
         	//Read File Line By Line
+    
     		curFields = strLine.split(delimiter);
     		if (curFields[0].equals(sSearchFor)) {
             	result = curFields[pIndex];
