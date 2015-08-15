@@ -2,7 +2,8 @@
  * This purpose of this fixture is to call a PowerCenter workflow via a webservice call.
  * The input parameters are provided by a table in the FitNesse wiki. 
  * @author Jac Beekers
- * @version 10 May 2015
+ * @version 14 Augustus 2015
+ * @since March 2014
  */
 package powercenter;
 
@@ -15,6 +16,11 @@ import java.io.*;
 
 import java.net.URL;
 import java.text.SimpleDateFormat;
+
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Properties;
 
 import javax.xml.namespace.QName;
 import javax.xml.ws.WebServiceRef;
@@ -43,8 +49,11 @@ public class StartWorkflow {
     private static URL wsdlLocationURL;
     DataIntegrationService diService;
     
-//    private String requestMode;
     private String abortYesNo =Constants.YES;
+    private boolean userSetAbortOnError =false;
+    
+    List<String> appProps = new ArrayList<String>();
+
     
     private String parameterFileName;
     private String parameterDirectory;
@@ -85,12 +94,13 @@ public class StartWorkflow {
      */
     public void setAbortOnError(String abortYesNo) throws WorkflowStopTest {
 		//Function to set abort on error, i.e. if workflowstoptest should be thrown in case of exceptions
+        userSetAbortOnError =true;
 	    if(abortYesNo == null || abortYesNo.isEmpty()) {
-            this.abortYesNo = Constants.YES;
+                this.abortYesNo = Constants.DEFAULT_ABORTONERROR;
 	    } 
 	    else {
 	    	if (Constants.YES.equals(abortYesNo) || Constants.NO.equals(abortYesNo)) {
-	    		this.abortYesNo = abortYesNo;          
+	    		this.abortYesNo = abortYesNo;
 	    	} 
 	    	else {
 	    		String myName="setAbortOnError";
@@ -102,12 +112,19 @@ public class StartWorkflow {
 	    }
 	  }
 
+    public String getAbortOnError() {
+        return this.abortYesNo;
+    }
+    
     /**
      * @param application
      */
     public void setApplication(String application) {
 		this.application = application;  
 	  }
+    public String getApplication() {
+        return this.application;
+    }
 
     /**
      * @param folder
@@ -161,7 +178,7 @@ public class StartWorkflow {
      * @return
      */
     public String sourceRows() {
-    	if ("Unknown".equals(RowsSource)) {
+    	if (Constants.UNKNOWN.equals(RowsSource)) {
     		return Integer.toString(NumSrcSuccessRows);
         } 
     	else {
@@ -195,7 +212,7 @@ public class StartWorkflow {
      * @return
      */
     public String targetRows() {
-        if("Unknown".equals(RowsTarget)) {
+        if(Constants.UNKNOWN.equals(RowsTarget)) {
           return Integer.toString(NumTgtSuccessRows);
         } 
         else {
@@ -397,7 +414,7 @@ public class StartWorkflow {
     public String workflowSuccessful () throws WorkflowStopTest {
     	// startWorkflow
     	String myName="workflowSuccessful";
-    	String myArea=Constants.NOT_INITIALIZED;
+    	String myArea="init";
     	String logMessage ="none";
     	String sessionID =Constants.NOT_INITIALIZED;
         int wfErrorCode =0;
@@ -417,6 +434,14 @@ public class StartWorkflow {
         log(myName, Constants.VERBOSE, myArea, logMessage);
         // set domain name, repository name, integration service name, user name and password
         readParameterFile();
+        readInfaProcessProperties();
+        
+        if(userSetAbortOnError) {
+            log(myName, Constants.DEBUG, myArea, "User specified the AbortOnError value >" +getAbortOnError() +"<.");
+        } else {
+            abortYesNo =getDefaultAbortOnErrorValue(getApplication());
+            log(myName, Constants.DEBUG, myArea, "AbortOnError has been set to >" +getAbortOnError() +"<.");
+        }
       
         sessionID =getSession();
         if (Constants.FATAL.equals(sessionID) || Constants.ERROR.equals(sessionID)) {
@@ -508,7 +533,7 @@ public class StartWorkflow {
         	handleInformaticaFault(myName, myArea, fault, Constants.FATAL);
             workflowResult=Constants.FATAL;
             if (Constants.YES.equals(abortYesNo)) {
-        	throw new WorkflowStopTest("Workflow start exception occurred on workflow >=" +folder+"/"+workflowName+"<.");
+        	throw new WorkflowStopTest("Workflow start exception occurred on workflow =>" +folder+"/"+workflowName+"<.");
             }
         }
         catch(Exception e) {
@@ -518,7 +543,7 @@ public class StartWorkflow {
         	log(myName, Constants.FATAL, myArea, logMessage);
                 workflowResult=Constants.FATAL;
             if (Constants.YES.equals(abortYesNo)) {
-        	throw new WorkflowStopTest("Workflow start exception occurred on workflow >=" +folder+"/"+workflowName+"<.");
+        	throw new WorkflowStopTest("Workflow start exception occurred on workflow =>" +folder+"/"+workflowName+"<.");
             }
         }
         try {
@@ -566,6 +591,8 @@ public class StartWorkflow {
         	GetSessionStatisticsRequest sessStatReq = new GetSessionStatisticsRequest();
         	sessStatReq.setDIServiceInfo(disi);
         	sessStatReq.setFolderName(folder);
+//                sessStatReq.setWorkflowName(workflowName);
+                
         
         	/*Assume session name equals workflow name (prefix wf_ removeD). Also: no worklets supported
         	String sessName ="s_" + workflowName.substring(3);
@@ -749,7 +776,77 @@ public class StartWorkflow {
     return logLevel;
     }
    
+    /*
+         * read Informatica process properties file
+         */
+    private void readInfaProcessProperties() {
+            String myName="readInfaProcessProperties";
+            String myArea="init";
+            
+        try {
+            myArea="Reading properties";
+            File file = new File(Constants.INFA_PROCESS_PROPERTIES);
+            FileInputStream fileInput = new FileInputStream(file);
+            Properties infaProcessProp = new Properties();
+            infaProcessProp.load(fileInput);
+            fileInput.close();
+            
+            Enumeration<?> enumKeys = infaProcessProp.propertyNames();
 
+            while (enumKeys.hasMoreElements()) {
+                String key = (String) enumKeys.nextElement();
+                String val = infaProcessProp.getProperty(key, Constants.NOT_FOUND);
+                appProps.add(key);
+                appProps.add(val);
+            }
+        } catch (FileNotFoundException e) {
+                    log(myName,Constants.INFO,myArea,"Properties file >" +Constants.INFA_PROCESS_PROPERTIES +"< not found. Defaults will be used.");
+                    } 
+           catch (IOException e) {
+                    log(myName,Constants.INFO,myArea,"I/O error reading properties file >" +Constants.INFA_PROCESS_PROPERTIES +"<. Defaults will be used.");
+                }
+
+        log(myName, Constants.VERBOSE,myArea,"infaprocess properties are >" + appProps.toString() +"<." );
+    }
+    
+    private String getDefaultAbortOnErrorValue(String appName) {
+        String myName="getDefaultAbortOnErrorValue";
+        String myArea="init";
+        String yesNo = getPropValue(appName.concat(Constants.APPPROP_DELIMITER).concat(Constants.PROP_ABORTONERROR));
+    
+    if(Constants.NOT_FOUND.equals(yesNo)) {
+            log(myName,Constants.DEBUG,myArea,"Default AbortOnError value for application >" + appName + "< not found." +
+                                              " System default value >" +Constants.DEFAULT_ABORTONERROR + "< will be used.");
+            return Constants.DEFAULT_ABORTONERROR;
+    }
+    else {
+        if(Constants.YES.equals(yesNo) || Constants.NO.equals(yesNo)) {
+          return yesNo;   
+        } else {
+            log(myName,Constants.DEBUG,myArea,"Default AbortOnError value for application >" + appName + "< has a wrong value >" + yesNo +"<."
+                                             + " System default value >" +Constants.DEFAULT_ABORTONERROR + "< will be used.");
+            return Constants.DEFAULT_ABORTONERROR;
+        }
+    }
+        
+    }
+
+    private String getPropValue(String appProp) {
+        String myName="getPropValue";
+        String myArea="init";
+        String appKey =Constants.NOT_FOUND;
+        String appKeyVal =Constants.NOT_FOUND;
+        
+        if(appProps.contains(appProp)) {
+           appKey =appProps.get(appProps.indexOf(appProp));
+           appKeyVal =appProps.get(appProps.indexOf(appProp) +1);
+           log(myName,Constants.DEBUG,myArea,"appKey is >" +appKey + "< and its value is >" +appKeyVal +"<.");
+        } else {
+            log(myName,Constants.DEBUG,myArea,"appProp >" +appProp + "< not found.");
+        }
+            
+        return appKeyVal;
+    }
 
 
    static class WorkflowStopTest extends Exception {

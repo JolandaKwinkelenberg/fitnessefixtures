@@ -38,6 +38,7 @@ public class BasicUpdate {
     private String filterValue = Constants.NOT_PROVIDED;
     private String modifyColumn = Constants.NOT_PROVIDED;
     private String modifyValue = Constants.NOT_PROVIDED;
+    private String numberOfRecordsUpdated =Constants.NONE;
 
     private String errorMessage = Constants.NOERRORS;
     private String errorLevel = Constants.OK;
@@ -52,6 +53,9 @@ public class BasicUpdate {
 
     }
 
+    /**
+     * @param context in which the fixture is called, used in log file name to more easily identify the area. Also used in reporting.
+     */
     public BasicUpdate(String context) {
         java.util.Date started = new java.util.Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -60,6 +64,10 @@ public class BasicUpdate {
     }
 
 
+    /**
+     * @param expected - the expected result. This will be compared to the actual result and determines the outcome of the method call.
+     * @return
+     */
     public boolean result(String expected) {
 
         readParameterFile();
@@ -105,7 +113,7 @@ public class BasicUpdate {
 
         Connection connection = null;
         Statement statement = null;
-        int updateQuery = 0;
+        int nrRecords = 0;
         String updateString=Constants.NOT_INITIALIZED;
         
         try {
@@ -115,13 +123,14 @@ public class BasicUpdate {
             // sql query of string type to submit update SQL statement into database.
             updateString =
                 "UPDATE " + tableName + " SET " + getModifyColumn() + "=" + getModifyValue() + "  WHERE " +
-                getFilterColumn() + "=" + getFilterValue();
+                getFilterColumn() + " IN (" + getFilterValue() +")";
 
             logMessage = "SQL: " + updateString;
             log(myName, Constants.INFO, myArea, logMessage);
-            updateQuery = statement.executeUpdate(updateString);
+            nrRecords =statement.executeUpdate(updateString);
+            setNumberOfRecordsUpdated(nrRecords);
 
-            if (updateQuery == 0) {
+            if (nrRecords == 0) {
                 if(getIgnore0Records().equals(Constants.NO)) {
                     setErrorMessage(Constants.ERROR,"Update statement did not update any records while Ignore0Records had been set to >" + getIgnore0Records() +"<.");
                 } else {
@@ -129,7 +138,7 @@ public class BasicUpdate {
                     log(myName, Constants.INFO, myArea, logMessage);
                 }
             } else {
-                logMessage="Update statement resulted in >" +updateQuery + "record(s) updated";
+                logMessage="Update statement resulted in >" +getNumberOfRecordsUpdated() + "< record(s) updated";
                 log(myName, Constants.INFO, myArea, logMessage);
             }
 
@@ -181,14 +190,14 @@ public class BasicUpdate {
     }
 
     /**
-     * @return
+     * @return the log file name
      */
     public String getLogFilename() {
         return logFileName + ".log";
     }
 
     /**
-     * @param level
+     * @param level to which logging should be set. Must be VERBOSE, DEBUG, INFO, WARNING, ERROR or FATAL. Defaults to INFO.
      */
     public void setLogLevel(String level) {
         String myName = "setLogLevel";
@@ -205,19 +214,22 @@ public class BasicUpdate {
     }
 
     /**
-     * @return
+     * @return - the log level
      */
     public String getLogLevel() {
         return Constants.logLevel.get(getIntLogLevel());
     }
 
     /**
-     * @return
+     * @return - the log level as Integer data type
      */
     public Integer getIntLogLevel() {
         return logLevel;
     }
 
+    /**
+     * @param databaseName to run the fixture against. This logical name must exist in database.properties
+     */
     public void setDatabaseName(String databaseName) {
         String myName="setDatabaseName";
         String myArea="run";
@@ -228,6 +240,9 @@ public class BasicUpdate {
         log(myName,Constants.VERBOSE,myArea,logMessage);
     }
 
+    /**
+     * @return - the database name the fixture runs against
+     */
     public String getDatabaseName() {
         return this.databaseName;
     }
@@ -242,10 +257,17 @@ public class BasicUpdate {
         log(myName,Constants.VERBOSE,myArea,logMessage);
     }
 
+    /**
+     * @return - the database table name used by the fixture
+     */
     public String getTableName() {
         return tableName;
     }
 
+    /**
+     * @param ignoreIt - whether or not an update that results in 0 records updated should be treated as OK or NOTOK
+     * @return - returns ERROR is the parameter was not Yes or No
+     */
     public String setIgnore0Records(String ignoreIt) {
         String myName = "setIgnore0Records";
         String myArea = "run";
@@ -264,7 +286,10 @@ public class BasicUpdate {
         }
         return rc;
     }
-    
+
+    /**
+     * @return - Whether the update should return OK even when no records are updated.
+     */
     public String getIgnore0Records() {
         return ignore0Records;
     }
@@ -285,10 +310,16 @@ public class BasicUpdate {
         setErrorLevel(level);
     }
 
+    /**
+     * @return - the error message (if any). If not "No errors encountered"  is returned (Check Constants for the actual value)
+     */
     public String getErrorMessage() {
         return errorMessage;
     }
 
+    /**
+     * @param colName: On which column in the database table a filter for the update statement should be applied
+     */
     public void setFilterColumn(String colName) {
         String myName = "setFilterColumn";
         String myArea = "run";
@@ -299,10 +330,16 @@ public class BasicUpdate {
         log(myName,Constants.VERBOSE,myArea,logMessage);
     }
 
+    /**
+     * @return - on which column the filter for the update statement is defined.
+     */
     public String getFilterColumn() {
         return filterColumn;
     }
 
+    /**
+     * @param colValue: To which value the column filter should be set. This can also be a subselect clause. Basically anything that is valid SQL after an IN operator
+     */
     public void setFilterValue(String colValue) {
         String myName = "setFilterColumn";
         String myArea = "run";
@@ -313,10 +350,16 @@ public class BasicUpdate {
         log(myName,Constants.VERBOSE,myArea,logMessage);
     }
 
+    /**
+     * @return - the filter expression used by the update statement to filter on.
+     */
     public String getFilterValue() {
         return filterValue;
     }
 
+    /**
+     * @param colName: The column that should have its value changed
+     */
     public void setModifyColumn(String colName) {
         String myName = "setModifyColumn";
         String myArea = "run";
@@ -327,10 +370,16 @@ public class BasicUpdate {
         log(myName,Constants.VERBOSE,myArea,logMessage);
     }
 
+    /**
+     * @return - the column that gets modified by the update statement
+     */
     public String getModifyColumn() {
         return this.modifyColumn;
     }
 
+    /**
+     * @param colValue: The value to which the modifyColumn should be changed. This can also be a subselect. Basically any valid SQL construct after the ==sign of the SET clause of an UPDATE statement
+     */
     public void setModifyValue(String colValue) {
         String myName = "setModifyValue";
         String myArea = "run";
@@ -341,6 +390,9 @@ public class BasicUpdate {
         log(myName,Constants.VERBOSE,myArea,logMessage);
     }
 
+    /**
+     * @return - The value to which the modifyColumn should be changed (or changed)
+     */
     public String getModifyValue() {
         return modifyValue;
     }
@@ -388,4 +440,13 @@ public class BasicUpdate {
     public String getErrorLevel() {
         return errorLevel;
     }
+    
+    private void setNumberOfRecordsUpdated(int i) {
+        this.numberOfRecordsUpdated = Integer.toString(i);
+    }
+
+    public String getNumberOfRecordsUpdated() {
+        return numberOfRecordsUpdated;
+    }
+
 }
