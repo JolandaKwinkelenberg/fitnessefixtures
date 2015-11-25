@@ -2,19 +2,29 @@
  * The purpose of this fixture is to compare the expected outcome of a database query with the actual outcome using the FitNesse slim 'table' table.
  * The input parameters are provided by a table in the FitNesse wiki. 
  * @author Jac. Beekers
- * @version 10 May 2015
+ * @version 21 November 2015
+ * @since   10 May 2015
  */ 
 package database;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
+import java.io.IOException;
 
 import java.sql.*;
 import java.text.*;
 import java.util.*;
+
+import linux.CheckFile;
 
 import supporting.Constants;
 import supporting.Logging;
 import supporting.GetParameters;
 
 public class BasicQuery {
+    private String version ="20151121.0";
 
 	private String className = "BasicQuery";
 	private String logFileName = Constants.NOT_INITIALIZED;
@@ -32,15 +42,23 @@ public class BasicQuery {
 	private int rowUnequalValues=0;
 	private int rowEqualValues=0;
 	private int NO_FITNESSE_ROWS_TO_SKIP = 3;
+        private int nrRecordsFound=0;
 
         private int logLevel =3;
+        private int logEntries =0;
         
 	private int numberOfTableColumns;
 	private String concatenatedColumnNames; // variables used to create select query
 
 	private List<List<String>> returnTable = new ArrayList<List<String>>(); //the return table, returns the outcome of fixture (="pass", "fail", "ignore", "no change")
 	  
-	private String returnMessage = ""; //text message that is returned to FitNesse  
+	private String returnMessage = ""; //text message that is returned to FitNesse
+        private String result=Constants.OK;
+        private String resultMessage=Constants.NOERRORS;
+        private String errorMessage=Constants.NOERRORS;
+        
+        //20151121
+        private String sqlFileName =Constants.NOT_PROVIDED;
 
 	public BasicQuery() {
 		//Constructors
@@ -64,6 +82,10 @@ public class BasicQuery {
 
 	    }
 
+    /**
+     * @param context
+     * @param logLevel
+     */
     public BasicQuery(String context, String logLevel) {
                 java.util.Date started = new java.util.Date();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -90,12 +112,12 @@ public class BasicQuery {
 			logMessage="number of columns in FitNesse table: " + Integer.toString(numberOfTableColumns);
 		    log(myName, Constants.DEBUG, myArea, logMessage);      
 
-		    getdatabaseName (inputTable.get(0)); //read first row in FitNesse table
+		    retrieveDatabaseName (inputTable.get(0)); //read first row in FitNesse table
  			readParameterFile();
 			getQuery (inputTable.get(1)); 		 //read second row in FitNesse table
 			getColumnNames (inputTable.get(2));  //read third row in FitNesse table
 
-	 		CompareExpectedTableWithDatabaseTable(inputTable, getDatabaseTable());  
+	 		CompareExpectedTableWithDatabaseTable(inputTable, getDatabaseTable(true));  
 	
 		    List<String> addRow = new ArrayList<String>();
 		    addRow.add("report:log file");
@@ -125,15 +147,15 @@ public class BasicQuery {
     /**
      * @param inputRow
      */
-    public void getdatabaseName (List<String> inputRow){
+    private void retrieveDatabaseName (List<String> inputRow){
 		//Function to read first row of table and set database name
-			String myName="getdatabaseName";
+			String myName="retreiveDatabaseName";
 			String myArea="Initialization";
 			String logMessage=Constants.NOT_INITIALIZED;
       
 			List<String> return_row = new ArrayList<String>();
-			databaseName = inputRow.get(1); //read first row second column
-			logMessage="database name: " + databaseName;
+			setDatabaseName(inputRow.get(1)); //read first row second column
+			logMessage="database name: " + getDatabaseName();
 			log(myName, Constants.VERBOSE, myArea, logMessage);      
 
 			addRowToReturnTable (return_row);
@@ -142,7 +164,7 @@ public class BasicQuery {
     /**
      * @param inputRow
      */
-    public void getQuery (List<String> inputRow){
+    private void getQuery (List<String> inputRow){
 		//Function to read second row of table and set database table name
 	    	String myName="getQuery";
 	    	String myArea="Initialization";
@@ -159,7 +181,7 @@ public class BasicQuery {
     /**
      * @param inputRow
      */
-    public void getColumnNames (List<String> inputRow){	 
+    private void getColumnNames (List<String> inputRow){	 
 		//Function to read third row of table and set column names
 	    	String myName="getColumnNames";
 	    	String myArea="Initialization";
@@ -291,7 +313,7 @@ public class BasicQuery {
     /**
      * @return
      */
-    public List<List<String>> getDatabaseTable (){
+    private List<List<String>> getDatabaseTable (boolean collectResultRows){
 	       String myName="getDatabaseTable";
 	       String myArea="Initialization";
 	       String logMessage=Constants.NOT_INITIALIZED;
@@ -303,19 +325,19 @@ public class BasicQuery {
 			  
 	       try {
 			    // Load the JDBC driver or oracle.jdbc.driver.OracleDriver or sun.jdbc.odbc.JdbcOdbcDriver
-			    Class.forName(driver);
-			    // Create a connection to the database
-			    connection = DriverManager.getConnection(url, userId, password);
-			    // createStatement() is used for create statement object that is used for sending sql statements to the specified database.
-			    statement = connection.createStatement();
-			    // sql query of string type to read database
-			    logMessage="Query >" + query +"<.";
-			    log(myName, Constants.DEBUG, myArea, logMessage);
-		
-			    resultset = statement.executeQuery(query);    
+//			    Class.forName(driver);
+		  // Create a connection to the database
+		    connection = DriverManager.getConnection(url, userId, password);
+		    // createStatement() is used for create statement object that is used for sending sql statements to the specified database.
+		    statement = connection.createStatement();
+		    // sql query of string type to read database
+		    logMessage="Query >" + query +"<.";
+		    log(myName, Constants.DEBUG, myArea, logMessage);
+		    resultset = statement.executeQuery(query);    
 			    
-				//Loop through the results
-			    while (resultset.next()) {
+                    //Loop through the results
+                    while (resultset.next()) {
+                        if(collectResultRows) {
 			    	List<String> database_row = new ArrayList<String>(); // initialize list to be reused
 			    	database_row.add("column value"); //first cell will consist of a fixed value "column name"
 			    	//Add db result row (=multiple field) into fitnesse results array			    	
@@ -329,29 +351,34 @@ public class BasicQuery {
 			    		}   						    		
 			    	}     	
 			    	databaseTable.add(database_row);
-				 }
-			    myArea="db query completed";
-			    logMessage="Number of database rows found: " + Integer.toString(databaseTable.size());
-			    log(myName, Constants.INFO, myArea, logMessage);
+                                nrRecordsFound++;
+			 }
+                        else {
+                            nrRecordsFound++;
+                        }
+                     }
+		    myArea="db query completed";
+		    logMessage="Number of database rows found: " + Integer.toString(databaseTable.size());
+		    log(myName, Constants.INFO, myArea, logMessage);
 		 	
-			    statement.close();
-			    connection.close();		    
-				} 
-		 	catch (ClassNotFoundException e) {
-		 		myArea="exception handling";
-		 		logMessage="ClassNotFoundException: " + e.toString();
-		 		log(myName, Constants.ERROR, myArea, logMessage);
-			    returnMessage = "Class not found : " + e;
-			} 
-		 	catch (SQLException e) {
-		 		myArea="exception handling";
-		 		logMessage="SQLException: " + e.toString();
-		 		log(myName, Constants.ERROR, myArea, logMessage);
-				returnMessage = "SQLException : " + e;
-			}
+		    statement.close();
+		    connection.close();	
+                   setResult(Constants.OK,logMessage);
+		} 
+		catch (SQLException e) {
+			myArea="exception handling";
+			logMessage="SQLException: " + e.toString();
+			log(myName, Constants.ERROR, myArea, logMessage);
+                        setError(Constants.ERROR,logMessage);
+			returnMessage = "SQLException : " + e;
+		}
 	       
-		 	return databaseTable;
-		  }     
+           if(collectResultRows) {
+                return databaseTable;
+           } else {
+                return null;
+           }
+        }     
 
 	private void addRowToReturnTable (List <String> row) {
 		//Function to add row to return table; a row contains cells with either "pass" (= green), or "fail" (= red).
@@ -363,12 +390,12 @@ public class BasicQuery {
         String myArea="reading parameters";
         String logMessage=Constants.NOT_INITIALIZED;
 
-        databaseType = GetParameters.GetDatabaseType(databaseName);
-        databaseConnDef = GetParameters.GetDatabaseConnectionDefinition(databaseName);
+        databaseType = GetParameters.GetDatabaseType(getDatabaseName());
+        databaseConnDef = GetParameters.GetDatabaseConnectionDefinition(getDatabaseName());
         driver = GetParameters.GetDatabaseDriver(databaseType);
         url = GetParameters.GetDatabaseURL(databaseConnDef);
-        userId = GetParameters.GetDatabaseUserName(databaseName);
-        password = GetParameters.GetDatabaseUserPWD(databaseName);
+        userId = GetParameters.GetDatabaseUserName(getDatabaseName());
+        password = GetParameters.GetDatabaseUserPWD(getDatabaseName());
 
         logMessage="databaseType >" + databaseType +"<.";       log(myName, Constants.VERBOSE, myArea, logMessage);
         logMessage="connection >" + databaseConnDef +"<.";       log(myName, Constants.VERBOSE, myArea, logMessage);
@@ -378,11 +405,15 @@ public class BasicQuery {
 	}
 
 	private void log(String name, String level, String location, String logText) {
-	       if(Constants.logLevel.indexOf(level.toUpperCase()) > getIntLogLevel()) {
+            if(Constants.logLevel.indexOf(level.toUpperCase()) > getIntLogLevel()) {
 	           return;
-	       }
+            }
+            logEntries++;
+            if(logEntries ==1) {
+                Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());                 
+            }
 
-		Logging.LogEntry(getLogFilename(), name, level, location, logText);	
+		Logging.LogEntry(logFileName, name, level, location, logText);	
 	   }
 
     /**
@@ -420,6 +451,178 @@ public class BasicQuery {
      */
     public Integer getIntLogLevel() {
         return logLevel;
+    }
+    
+    /* 
+     * @since 20151121.0
+     *
+    */
+    public String getVersion() {
+        return version;
+    }
+    
+    public String getDatabaseName() {
+        return databaseName;
+    }
+    public void setDatabaseName(String dbname) {
+        this.databaseName = dbname;
+    }
+    
+    public void setSqlFile(String logicalDirAndFilename) {
+        String logMessage=Constants.NOT_INITIALIZED;
+        String myName="setSqlFile";
+        String myArea="init";
+        
+        String dirAndFile = logicalDirAndFilename;
+        String[] dirFileArray =dirAndFile.split("/",2);
+        if(dirFileArray.length != 2) {
+            logMessage="Invalid directory/filename >" + logicalDirAndFilename +"<. Must be able to split in two parts, separated by at least one /";
+            log(myName, Constants.ERROR, myArea, logMessage);
+           return;   
+        }
+        String dir =dirFileArray[0];
+        String fileName =dirFileArray[1];
+        
+        dirFileArray =dirAndFile.split(" ",2);
+        
+        if(dirFileArray.length != 2) {
+            logMessage="Invalid directory/filename >" + logicalDirAndFilename +"<. Must be able to split in two parts, separated by one space";
+            log(myName, Constants.ERROR, myArea, logMessage);
+           return;   
+        }
+        
+        CheckFile checkSqlFile = new CheckFile(context, getLogLevel());
+        sqlFileName =checkSqlFile.DetermineCompleteFileName(dir, fileName);
+        
+    }
+    public String getSqlFile() {
+        return sqlFileName;
+    }
+    
+    public String queryExecution() {
+        String logMessage="init";
+        String myName="queryExecution";
+        String myArea="processing";
+        log(myName, Constants.DEBUG, myArea, logMessage);
+        
+        String sqlStatement = Constants.NOT_INITIALIZED;
+        
+        log(myName, Constants.DEBUG, myArea, "reading parameter file...");
+        readParameterFile();
+        log(myName, Constants.DEBUG, myArea, "Done.");
+
+        log(myName, Constants.DEBUG, myArea, "determining sql statement...");
+        sqlStatement =determineSQLStatement();
+        log(myName, Constants.DEBUG, myArea, "Done.");
+
+        setQuery(sqlStatement);
+
+        log(myName, Constants.DEBUG, myArea, "Getting database result...");
+        getDatabaseTable(false);
+        log(myName, Constants.DEBUG, myArea, "Done");
+        log(myName, Constants.DEBUG, myArea, "Database returned >" +nrRecordsFound +"< records.");
+
+        log(myName, Constants.DEBUG, myArea, "Process resulted in >" + getErrorMessage() +"<.");
+
+        if(Constants.NOERRORS.equals(getErrorMessage())) {
+            return Constants.OK;
+        } else {
+            return Constants.ERROR;
+        }
+        
+        
+    }
+        
+    private String determineSQLStatement() {
+            
+        String logMessage=Constants.NOT_INITIALIZED;
+        String myName="determineSQLStatement";
+        String myArea="init";
+        String theLine =Constants.NOT_INITIALIZED;
+        String sqlStatement="/* BasicQuery - queryExecution */ ";
+        
+        try {
+            BufferedReader ins = new BufferedReader(new FileReader(getSqlFile()));
+            int rowCount=0;
+            myArea="Reading file";
+            try {
+                while ((theLine = ins.readLine()) != null) {
+                      ++rowCount;
+                      logMessage="processing line >" + rowCount + "<.";
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    sqlStatement =sqlStatement.concat(theLine);
+                    sqlStatement =sqlStatement.concat(" ");
+                }
+            } catch (IOException e) {
+                logMessage="Error reading from file >" + getSqlFile() +"<. Error =>" + e.toString() +"<.";
+                log(myName, Constants.ERROR, myArea, logMessage);
+                setError(Constants.ERROR, logMessage);
+                setResult(Constants.ERROR);
+                try {
+                    ins.close();
+                } catch (IOException f) {
+                    logMessage="Error closing file >" + getSqlFile() +"<. Error =>" + f.toString() +"<.";
+                    log(myName, Constants.ERROR, myArea, logMessage);
+                }
+                return Constants.ERROR;
+            }
+            logMessage="SQL statement determined as >" + sqlStatement +"<.";
+            log(myName, Constants.DEBUG, myArea, logMessage);
+            sqlStatement =sqlStatement.trim();
+            if(sqlStatement.endsWith(Constants.STATEMENT_DELIMITER)) {
+                sqlStatement =sqlStatement.substring(0, sqlStatement.length()-1);
+            }
+            logMessage="SQL statement after removal of separator >" + Constants.STATEMENT_DELIMITER +"< is >" + sqlStatement +"<.";
+            log(myName, Constants.DEBUG, myArea, logMessage);
+            
+            setResult(Constants.OK);
+            ins.close();
+        } catch (FileNotFoundException e) {
+            logMessage="Could not open file >" + getSqlFile() +"< for reading. Error =>" +e.toString() +"<.";
+            log(myName, Constants.ERROR, myArea, logMessage);
+            setError(Constants.ERROR, logMessage);
+            setResult(Constants.ERROR);
+            return Constants.ERROR;
+        } catch (IOException e) {
+            logMessage="Error closing file >" + getSqlFile() +"<. Error =>" + e.toString() +"<.";
+            log(myName, Constants.ERROR, myArea, logMessage);
+        }
+
+        return sqlStatement;
+    }
+        
+    public String rowsReturned() {
+        return Integer.toString(nrRecordsFound);
+    }
+    
+    public String getResult() {
+        return result;
+    }
+    private void setResult(String result) {
+        this.result =result;
+    }
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+    private void setErrorMessage(String error) {
+        this.errorMessage=error;
+    }
+    public String getResultMessage() {
+        return resultMessage;
+    }
+    private void setResultMessage(String result) {
+        this.resultMessage =result;
+    }
+    private void setError(String errCode, String errMsg) {
+        setResult(errCode);
+        setErrorMessage(errMsg);
+    }
+    private void setResult(String code, String msg) {
+        setResult(code);
+        setResultMessage(msg);
+    }
+    private void setQuery(String sqlStatement) {
+        query=sqlStatement;
     }
 
 }

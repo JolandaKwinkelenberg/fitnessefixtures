@@ -1,7 +1,7 @@
 /**
  * This purpose of this fixture is to store all the generic constants centrally.
  * @author Edward Crain, Jac. Beekers
- * @version 13 July 2015
+ * @version 21 November 2015
  */
 package supporting;
 
@@ -69,6 +69,7 @@ public class Constants {
     public static final String LOG_FILE_DELIMITER = ";";
     public static final String INPUT_FILE_DELIMITER = ":";
     public static final String QUERY_DELIMITER = ",";
+    public static final String STATEMENT_DELIMITER = ";";
     public static final String COLUMN_DELIMITER =",";
     public static final String FIELD_DELIMITER =";";
     public static final String APPPROP_DELIMITER =".";
