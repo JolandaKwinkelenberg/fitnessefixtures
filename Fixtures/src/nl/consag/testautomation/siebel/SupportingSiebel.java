@@ -30,7 +30,7 @@ import nl.consag.supporting.Constants;
 import nl.consag.supporting.Logging;
 
 public class SupportingSiebel {
-    private String version ="20151220.0";
+    private static String version ="20151220.0";
 
     private String className = "SupportingSiebel";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -75,8 +75,8 @@ public class SupportingSiebel {
             logFileName = this.startDate + "." + this.className +"." +this.context;
         }
 
-    public String getVersion() {
-        return this.version;
+    public static String getVersion() {
+        return version;
     }
 
     public String getSiebelConnValue() {

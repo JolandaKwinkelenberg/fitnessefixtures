@@ -18,7 +18,7 @@ import java.util.*;
 
 public class CheckFile {
 
-  private String version ="20151121.0";
+  private static String version ="20151121.0";
   private String className = "CheckFile";
 
   private String logFileName = Constants.NOT_INITIALIZED;
@@ -738,7 +738,7 @@ public class CheckFile {
 
     }
     
-    public String getVersion() {
+    public static String getVersion() {
         return version;
     }
     
