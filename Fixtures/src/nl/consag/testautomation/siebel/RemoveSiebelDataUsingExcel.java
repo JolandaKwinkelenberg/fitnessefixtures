@@ -30,7 +30,7 @@ import nl.consag.testautomation.supporting.ExcelFile;
 
 public class RemoveSiebelDataUsingExcel {
 
-    private String version ="20151219.1";
+    private static String version ="20151219.1";
     
 	private String className = "RemoveSiebelDataUsingExcel";
 	private String logFileName = Constants.NOT_INITIALIZED;
@@ -93,8 +93,8 @@ public class RemoveSiebelDataUsingExcel {
     /**
      * @return Fixture version
      */
-    public String getVersion() {
-        return this.version;
+    public static  String getVersion() {
+        return version;
     }
     
     /**
@@ -648,7 +648,7 @@ public class RemoveSiebelDataUsingExcel {
                }
                nrLog++;
                if(nrLog ==1) {
-                   Logging.LogEntry(logFileName, name, Constants.INFO, "version info", getVersion());
+    //               Logging.LogEntry(logFileName, name, Constants.INFO, "version info", getVersion());
                }
                 Logging.LogEntry(logFileName, name, level, location, logText);  
            }

@@ -29,8 +29,8 @@ import ml.options.Options;
 import nl.consag.supporting.Constants;
 
 public class ConsagFitNesseFixtures {
-    private final static String className="ConsagFitNesseFixtures";
-    private final static String version = "20160114.0";
+    private static final String className="ConsagFitNesseFixtures";
+    private static final String version = "20160116.0";
     private static int logLevel = 3;
     private static int logEntries = 0;
     private static boolean noClassFilter =true;
@@ -88,7 +88,7 @@ public class ConsagFitNesseFixtures {
 
     }
 
-    private static String getVersion() {
+    public static String getVersion() {
         return version;
     }
 
@@ -177,25 +177,23 @@ public class ConsagFitNesseFixtures {
 
     private static String getFixtureVersion(String fixtureName) {
         String rc =Constants.UNKNOWN;
+        double rcd=0;
         
         try {
-            Class c = Class.forName(fixtureName);
-            Object o = c.newInstance();
-            Method versionMethod = c.getMethod("getVersion");
-            rc = (String) versionMethod.invoke(o);
+            Class<?> c = Class.forName(fixtureName);
+            Method getVersion = c.getDeclaredMethod("getVersion");
+            rc = (String) getVersion.invoke(null);
             rc ="Fixture >" +fixtureName +"< is at version >" +rc +"<.";
         }
                 catch (ClassNotFoundException e) {
-                   rc= "Unknown fixture >" +fixtureName+"<. Error: " +e.toString();
+                   rc= "Unknown fixture >" +fixtureName+"<. Error =>" +e.toString() +"<.";
                 }
          catch (NoSuchMethodException e) {
-            rc="Fixture >" +fixtureName+"< does not (yet) have a getVersion method. Cannot determine version number.";
+            rc="Class >" +fixtureName+"< does not (yet) have a getVersion method.";
         } catch (IllegalAccessException e) {
-            rc= "Cannot access fixture class >" +fixtureName +"<. " +e.toString() + ". Cannot determine version number.";
-        } catch (InstantiationException e) {
-            rc= "Could not instantiate fixture class >" +fixtureName +"<. " +e.toString() +". Cannot determine version number.";
+            rc= "Cannot access fixture class >" +fixtureName +"<. Error =>" +e.toString() + "<.";
         } catch (InvocationTargetException e) {
-            rc= "Could not invoke 'getVersion' method of fixture class >" +fixtureName +"<." +e.toString() + ". Cannot determine version number.";
+            rc= "Could not invoke 'getVersion' method of fixture class >" +fixtureName +"<. Error =>" +e.toString() + "<.";
         }
         return rc;
         

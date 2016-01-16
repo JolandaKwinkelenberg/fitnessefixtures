@@ -24,7 +24,7 @@ import nl.consag.supporting.GetParameters;
 public class GetSingleValue {
 
     private String className = "GetSingleValue";
-    private String version ="20160111.0";
+    private static String version ="20160111.0";
     
     private String logFileName = Constants.NOT_INITIALIZED;
     private String context = Constants.NOT_INITIALIZED;
@@ -440,7 +440,7 @@ public class GetSingleValue {
         return formatResult(errorMessage);
     }
     
-    public String getVersion() {
+    public static String getVersion() {
         return version;
     }
 

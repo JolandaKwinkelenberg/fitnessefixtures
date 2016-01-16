@@ -24,7 +24,7 @@ import nl.consag.supporting.Logging;
 import nl.consag.supporting.GetParameters;
 
 public class BasicQuery {
-    private String version ="20151121.0";
+    private static String version ="20151121.0";
 
 	private String className = "BasicQuery";
 	private String logFileName = Constants.NOT_INITIALIZED;
@@ -457,7 +457,7 @@ public class BasicQuery {
      * @since 20151121.0
      *
     */
-    public String getVersion() {
+    public static String getVersion() {
         return version;
     }
     

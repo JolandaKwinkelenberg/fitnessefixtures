@@ -28,7 +28,7 @@ import nl.consag.testautomation.supporting.ExcelFile;
 
 
 public class LoadSiebelDataFromExcel {
-    private String version ="20151219.0";
+    private static String version ="20151219.0";
     private int nrLog=0;
     
 	private String className = "LoadSiebelDataFromExcel";
@@ -92,8 +92,8 @@ public class LoadSiebelDataFromExcel {
 	        logFileName = startDate + "." + className;
 	    }
 
-    public String getVersion() {
-        return this.version;
+    public static String getVersion() {
+        return version;
     }
 
     /**
