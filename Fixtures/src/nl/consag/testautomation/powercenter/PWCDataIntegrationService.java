@@ -28,8 +28,10 @@ import nl.consag.supporting.GetParameters;
   targetNamespace="http://www.informatica.com/wsh", name="DataIntegrationService")
 public class PWCDataIntegrationService
   	extends com.informatica.wsh.DataIntegrationService {
+    private static String version ="20160116.0";
+    
 	private static URL wsdlLocationURL;
-	private static String m_application = new String();
+	private static String m_application = "unknown";
 	private static String m_WsdlUrl="unknown";
 	private static String logText="none";
 	private static String myName="constructor-static";
@@ -98,4 +100,7 @@ public class PWCDataIntegrationService
                                                                         com.informatica.wsh.DataIntegrationInterface.class,
                                                                         features);
   }
+    public static String getVersion() {
+        return version;
+    }
 }

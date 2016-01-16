@@ -19,7 +19,7 @@ import nl.consag.supporting.Logging;
 import nl.consag.supporting.GetParameters;
 
 public class CreateTable {
-    private String version ="20160106.1";
+    private static String version ="20160106.1";
 
     private int logLevel =3;
     private int logEntries =0;
@@ -344,7 +344,7 @@ public class CreateTable {
      * @since 20160106.0
      * @return fixture version number
      */
-    public String getVersion() {
+    public static String getVersion() {
         return version;
     }
 

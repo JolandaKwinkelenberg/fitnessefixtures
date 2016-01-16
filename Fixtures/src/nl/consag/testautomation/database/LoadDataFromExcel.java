@@ -31,7 +31,7 @@ import nl.consag.supporting.GetParameters;
 
 public class LoadDataFromExcel {
 
-    static protected String version = "20160108.0";
+    private static String version = "20160108.0";
 
     private String className = "LoadDataFromExcel";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -337,7 +337,7 @@ public class LoadDataFromExcel {
         return logFileName;
     }
 
-    public String getVersion() {
+    public static String getVersion() {
         return version;
     }
 

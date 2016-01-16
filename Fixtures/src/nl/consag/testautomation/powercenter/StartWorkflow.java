@@ -30,7 +30,7 @@ import javax.xml.ws.WebServiceRef;
 
 public class StartWorkflow {
 
-    private String version = "20160110.0";
+    private static String version = "20160110.0";
     private String className = "StartWorkflow";
     private String logFileName = Constants.NOT_INITIALIZED;
     private String startDate = Constants.NOT_INITIALIZED;
@@ -858,7 +858,7 @@ public class StartWorkflow {
         return appKeyVal;
     }
 
-    public String getVersion() {
+    public static String getVersion() {
         return version;
     }
 
