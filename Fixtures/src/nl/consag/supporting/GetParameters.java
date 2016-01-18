@@ -60,7 +60,7 @@ public class GetParameters {
 
     public static String GetLogUrl() {
             //GetLogDir: Determine the URL to use for log file retrieval
-        String url =FindParameter(Constants.ENVIRONMENT_PROPERTIES, Constants.PARAM_LOG_URL);
+        String url =getPropertyVal(Constants.ENVIRONMENT_PROPERTIES, Constants.PARAM_LOG_URL);
         if (url.equals(Constants.NOT_FOUND)) {
             url =Constants.LOG_URL;
         }
