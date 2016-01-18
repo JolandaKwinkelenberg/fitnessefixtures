@@ -5,7 +5,7 @@
  * The input parameters are provided by a table in the FitNesse wiki. 
  * @author Jac Beekers
  * @since May 2015
- * @version 20160111.0
+ * @version 20160118.0
  */
 package nl.consag.testautomation.database;
 
@@ -24,7 +24,7 @@ import nl.consag.supporting.GetParameters;
 public class GetSingleValue {
 
     private String className = "GetSingleValue";
-    private static String version ="20160111.0";
+    private static String version ="20160118.0";
     
     private String logFileName = Constants.NOT_INITIALIZED;
     private String context = Constants.NOT_INITIALIZED;
@@ -261,7 +261,7 @@ public class GetSingleValue {
                 }
 
                 return_message = sResult0;
-                setResult(Constants.OK);
+                setResult(return_message);
                 
             } else {
                 if(Constants.ALL.equals(queryMode)) {
@@ -282,7 +282,7 @@ public class GetSingleValue {
                     logMessage="Concatenated DB result =>" + sResult0 + "<.";
                     log(myName, Constants.DEBUG, myArea, logMessage);
                     return_message=sResult0;
-                    setResult(Constants.OK);
+                    setResult(return_message);
                 } else {
                     //unknown queryMode
                     logMessage="Internal error. Invalid query mode >" + queryMode + "<.";
@@ -410,7 +410,7 @@ public class GetSingleValue {
     }
 
     public String getResult() {
-        return formatResult(result);
+        return result;
     }
     
     public String formatResult(String msg) {
