@@ -2,7 +2,7 @@
  * This purpose of this fixture is to call a PowerCenter workflow via a webservice call.
  * The input parameters are provided by a table in the FitNesse wiki. 
  * @author Jac Beekers
- * @version 201601.10.0
+ * @version 20160122.0
  * @since March 2014
  */
 package nl.consag.testautomation.powercenter;
@@ -28,15 +28,19 @@ import java.util.Properties;
 import javax.xml.namespace.QName;
 import javax.xml.ws.WebServiceRef;
 
+
 public class StartWorkflow {
 
-    private static String version = "20160110.0";
+    private static String version = "20160122.0";
     private String className = "StartWorkflow";
     private String logFileName = Constants.NOT_INITIALIZED;
     private String startDate = Constants.NOT_INITIALIZED;
     private String context = Constants.DEFAULT;
     private int logLevel = 3;
     private int logEntries = 0;
+    private String logUrl=Constants.LOG_DIR;
+    private String resultFormat =Constants.DEFAULT_RESULT_FORMAT;
+
 
     private String folder;
     private String application;
@@ -67,6 +71,8 @@ public class StartWorkflow {
     private int NumSrcFailedRows, NumSrcSuccessRows, NumDuration, NumTables, NumTgtFailedRows, NumTgtSuccessRows, NumTransErrors, NumEndTime, NumStartTime 
         =0;
 
+    private int repeat=1;
+    List<String> iterationReturnCodes = new ArrayList<String>();
 
     @WebServiceRef
     private static MetadataService metadataService;
@@ -78,6 +84,8 @@ public class StartWorkflow {
         startDate = sdf.format(started);
         context = className;
         logFileName = startDate + "." + className;
+        readParameterFile();
+        readInfaProcessProperties();
 
     }
 
@@ -91,6 +99,8 @@ public class StartWorkflow {
         startDate = sdf.format(started);
         this.context = context;
         logFileName = startDate + "." + className + "." + context;
+        readParameterFile();
+        readInfaProcessProperties();
 
     }
 
@@ -181,6 +191,10 @@ public class StartWorkflow {
             "FirstErrCode set to >" + errCode + "< and FirstErr set to >" + errMsg);
     }
 
+    public String getErrorCode() {
+        return FirstErrCode;
+    }
+    
     /**
      * @return
      */
@@ -408,6 +422,8 @@ public class StartWorkflow {
         return myReturnMsg;
     }
 
+
+
     /**
      * @return
      * @throws Fault
@@ -425,6 +441,9 @@ public class StartWorkflow {
         FirstErr = Constants.NOERRORS;
         LastErr = Constants.NOERRORS;
 
+        readParameterFile();
+        readInfaProcessProperties();
+
         // DataIntegrationService dataIntegrationService;
         resetWFInfo();
         myArea = "initialization";
@@ -434,9 +453,6 @@ public class StartWorkflow {
         log(myName, Constants.DEBUG, myArea, logMessage);
         logMessage = "=================================================================";
         log(myName, Constants.VERBOSE, myArea, logMessage);
-        // set domain name, repository name, integration service name, user name and password
-        readParameterFile();
-        readInfaProcessProperties();
 
         if (userSetAbortOnError) {
             log(myName, Constants.DEBUG, myArea, "User specified the AbortOnError value >" + getAbortOnError() + "<.");
@@ -550,8 +566,7 @@ public class StartWorkflow {
         try {
             diInterface.waitTillWorkflowComplete(wfRequest, sessHeader);
         } catch (Fault fault) {
-            workflowResult = Constants.FATAL;
-            handleInformaticaFault(myName, myArea, fault, Constants.FATAL);
+            handleInformaticaFault(myName, myArea, fault, Constants.ERROR);
             //throw new WorkflowStopTest("Workflow >=" +folder+"/"+workflowName+"< failed.");
         } catch (Exception e) {
             logMessage =
@@ -583,8 +598,7 @@ public class StartWorkflow {
             logMessage = "Workflow error message =>" + wfErrorMsg + "<.";
             log(myName, Constants.INFO, myArea, logMessage);
         } catch (Fault fault) {
-            workflowResult = Constants.FATAL;
-            handleInformaticaFault(myName, myArea, fault, Constants.FATAL);
+            handleInformaticaFault(myName, myArea, fault, Constants.ERROR);
         }
 
         if (wfErrorCode == 0 && workflowResult.equals(Constants.YES)) {
@@ -707,6 +721,16 @@ public class StartWorkflow {
         logMessage = "Read from parameter file url=>" + WsdlUrl + "<.";
         log(myName, Constants.DEBUG, myArea, logMessage);
 
+        logUrl = GetParameters.GetLogUrl();
+        logMessage = "logURL >" + logUrl +"<.";
+        log(myName, Constants.DEBUG, myArea, logMessage);
+        
+        resultFormat =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RESULT_FORMAT);
+        if(Constants.NOT_FOUND.equals(resultFormat))
+            resultFormat =Constants.DEFAULT_RESULT_FORMAT;
+        logMessage = "resultFormat >" + resultFormat +"<.";
+        log(myName, Constants.DEBUG, myArea, logMessage);
+
         myArea = "Finalizing";
         logMessage = "end";
         log(myName, Constants.VERBOSE, myArea, logMessage);
@@ -729,7 +753,7 @@ public class StartWorkflow {
         logMessage = "error handling completed.";
         log(myName, Constants.INFO, myArea, logMessage);
 
-        workflowResult = severity;
+        workflowResult = getErrorCode();
     }
 
     private void log(String name, String level, String location, String logText) {
@@ -749,7 +773,10 @@ public class StartWorkflow {
      * @return
      */
     public String getLogFilename() {
-        return logFileName + ".log";
+        if(logUrl.startsWith("http"))
+            return "<a href=\"" +logUrl+logFileName +".log\" target=\"_blank\">log</a>";
+        else
+            return logUrl+logFileName + ".log";
     }
 
     /**
@@ -782,6 +809,33 @@ public class StartWorkflow {
     public Integer getIntLogLevel() {
         return logLevel;
     }
+
+    public String formatResult(String msg) {
+        String formatted =msg;
+        /*
+         * need to compile for 1.6, so can't use switch :(
+         * 
+        switch (resultFormat) {
+        case Constants.RESULT_AS_HTML:
+            formatted="<b>"+msg+"</b>";
+            break;
+        case Constants.RESULT_AS_JSON:
+            formatted="\"result\":\"" +msg +"\"";
+            break;
+        default:
+            break;
+        }
+    */
+        if(Constants.RESULT_AS_HTML.equals(resultFormat)) {
+            formatted="<b>"+msg+"</b>";
+        } else {
+            if(Constants.RESULT_AS_JSON.equals(resultFormat)) {
+                formatted="\"result\":\"" +msg +"\"";
+            }
+        }
+        return formatted;
+    }
+
 
     /*
          * read Informatica process properties file
@@ -862,6 +916,94 @@ public class StartWorkflow {
         return version;
     }
 
+
+    public String setRepeat(String repeat) {
+        this.repeat =Integer.parseInt(repeat);
+        
+        return Constants.NOT_IMPLEMENTED;
+    }
+    
+    public String getRepeat(){
+        return Integer.toString(repeat);
+    }
+
+    public String allWorkflowsSuccessful() throws WorkflowStopTest {
+        String myName ="allWorkflowsSuccessful";
+        String myArea ="init";
+        String logMessage =Constants.OK;
+        String overallReturnCode =Constants.YES;
+        String latestReturnCode =Constants.YES;
+        
+        logMessage = "Start.";
+        log(myName, Constants.DEBUG, myArea, logMessage);
+
+        readParameterFile();
+        readInfaProcessProperties();
+
+        myArea="running";
+        for(int i=0 ; i < repeat ; i++) {
+            String thisRunReturnCode =Constants.OK;
+            logMessage = "Iteration >" + Integer.toString(i+1) +"<.";
+            log(myName, Constants.DEBUG, myArea, logMessage);
+            
+            thisRunReturnCode = workflowSuccessful();
+            
+            logMessage ="Iteration >" + Integer.toString(i+1) +"< returned >" + thisRunReturnCode +"<.";
+            log(myName, Constants.DEBUG, myArea, logMessage);
+            
+            setReturnCodeForIteration(i,thisRunReturnCode);
+            if(! Constants.YES.equals(thisRunReturnCode)) {
+                overallReturnCode =Constants.ERROR;
+                latestReturnCode =thisRunReturnCode;
+                if(getAbortOnError().equals(Constants.YES)) {
+                    throw new WorkflowStopTest(logMessage);
+                }
+            }
+        }
+
+        myArea="completion";
+        
+        logMessage = "End with return code >" +overallReturnCode +"<.";
+        log(myName, Constants.DEBUG, myArea, logMessage);
+
+        return overallReturnCode;
+        
+    }
+
+    private void setReturnCodeForIteration(int iteration, String iterationReturnCode) {
+        iterationReturnCodes.add(iteration, iterationReturnCode);
+    }
+
+    public String getReturnCodeForIteration(String iteration) {
+        String myName="getReturnCodeForIteration";
+        String myArea="run";
+        String logMessage=Constants.OK;
+        int nrIteration =1;
+        String rc =Constants.YES;
+        
+        try {
+           nrIteration =Integer.parseInt(iteration);
+        }
+        catch (NumberFormatException e) {
+            logMessage ="Invalid iteration value >" + iteration +"< specified. Must be numeric";
+            log(myName, Constants.FATAL, myArea, logMessage);   
+            return "Non-numeric iteration number specified";
+        }
+
+        if(nrIteration > iterationReturnCodes.size()) {
+            logMessage ="Invalid iteration value >" + iteration 
+                        +"< specified. Number of iterations with a return code =>" +Integer.toString(iterationReturnCodes.size()) +"<.";
+            log(myName, Constants.ERROR, myArea, logMessage);   
+            return "Iteration not found";
+        }
+        
+        rc =iterationReturnCodes.get(nrIteration);
+        logMessage ="Iteration >" +iteration +"< has return code >" +rc +"<.";
+        log(myName, Constants.FATAL, myArea, logMessage);   
+
+        return rc;
+        
+    }
 
     static class WorkflowStopTest extends Exception {
         @SuppressWarnings("compatibility:849567740548138166")

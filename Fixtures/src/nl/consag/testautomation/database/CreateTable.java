@@ -204,6 +204,9 @@ public class CreateTable {
         }
         
         readParameterFile();
+        /*
+         * need to compile for 1.6, so can't use switch :(
+         * 
         switch (databaseType) {
         case "Oracle":
             query = "SELECT count(*) tblcount FROM user_tables WHERE table_name ='" + tableName + "'";
@@ -218,6 +221,22 @@ public class CreateTable {
             setError(Constants.ERROR,logMessage);
             return false;
         }
+*/
+        if("Oracle".equals(databaseType)) {
+            query = "SELECT count(*) tblcount FROM user_tables WHERE table_name ='" + tableName + "'";
+        }
+        else {
+            if ("DB2".equals(databaseType)) {
+                query = "SELECT count(*) tblcount FROM SYSIBM.SYSTABLES WHERE name ='" + tableName + "'";
+                }
+            else {
+            logMessage = "databaseType >" + databaseType + "< not yet supported";
+            log(myName, "info", myArea, logMessage);
+            setError(Constants.ERROR,logMessage);
+            return false;
+            }
+        }
+        
         GetSingleValue dbCol = new GetSingleValue(className);
         dbCol.setDatabaseName(databaseConnection);
         dbCol.setQuery(query);

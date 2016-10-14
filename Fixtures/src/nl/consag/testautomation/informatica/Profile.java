@@ -1,11 +1,10 @@
 /**
  * This purpose of this fixture is to provide information on Informatica DQ Profiles
  * @author Jac Beekers
- * @version 10 May 2015
+ * @since 10 May 2015
+ * @version 20160705.0 - Filter on specific folder, user can use wildcards. Added filter on profile name
  */
 package nl.consag.testautomation.informatica;
-
-import nl.consag.testautomation.database.BasicQuery;
 
 import java.text.SimpleDateFormat;
 
@@ -19,7 +18,10 @@ import nl.consag.testautomation.supporting.GetDatabaseTable;
 
 //import static supporting.ListUtility.list;
 import nl.consag.supporting.Logging;
-import nl.consag.testautomation.supporting.RunScript;
+
+import nl.consag.testautomation.scripts.RunScript;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class Profile {
 
@@ -39,7 +41,8 @@ public class Profile {
     private List<List<String>> profileList=new ArrayList<List<String>>();
 
     //Queries taken from Informatica Support DocId 322200
-    private String sqlMRProfiles ="SELECT /* FitNesse Fixture Profile (c) Consag Consultancy Services B.V. */ A.POP_NAME AS PROFILE_NAME,\n" + 
+    private String sqlMRProfiles ="SELECT /* FitNesse Fixture Profile (c) Consag Consultancy Services B.V. */ " +
+        "A.POP_NAME AS PROFILE_NAME,\n" + 
     "  P.PROJECT_NAME||T.OBJECT_PATH AS FOLDER_PATH,\n" + 
     "  P.PROJECT_NAME  AS PROJECT_NAME,\n" + 
     "  'Profile' AS OBJECT_TYPE\n" + 
@@ -55,7 +58,8 @@ public class Profile {
         "Profile Name", "Folder Path","Project Name","Object Type"));
 
 
-    private String sqlMRScorecards ="SELECT /* FitNesse Fixture Profile (c) Consag Consultancy Services B.V. */ A.POS_NAME AS SCORECARD_NAME,\n" + 
+    private String sqlMRScorecards ="SELECT /* FitNesse Fixture Profile (c) Consag Consultancy Services B.V. */ " +
+        "A.POS_NAME AS SCORECARD_NAME,\n" + 
     "  P.PROJECT_NAME||T.OBJECT_PATH   AS FOLDER_PATH,\n" + 
     "  P.PROJECT_NAME  AS PROJECT_NAME,\n" + 
     "  'Scorecard' AS OBJECT_TYPE\n" + 
@@ -72,6 +76,8 @@ public class Profile {
 
     private String databaseName = Constants.NOT_INITIALIZED;
     private String project = Constants.NOT_PROVIDED;
+    private String folderName = Constants.ALL;
+    private String objectName = Constants.ALL;
 
 
     public Profile() {
@@ -180,13 +186,29 @@ public class Profile {
         profQuery.setDatabaseName(getDatabaseName());
         myArea="calling GetDatabaseTable";
         
-        if(getProjectName().equals(Constants.ALL)) {
+        if(getProjectName().equalsIgnoreCase(Constants.ALL)) {
             sqlMR=sqlMRProfiles;
             }
         else {
             //Add filter on project
             sqlMR=sqlMRProfiles +" AND p.project_name = '" + getProjectName() +"'";
         }
+        
+        if(!Constants.ALL.equalsIgnoreCase(getFolderName())) {
+            int nrSlashesInArg= StringUtils.countMatches(getFolderName(),Constants.IDQ_PATH_SEPARATOR);
+            logMessage="Occurrences of >" + Constants.IDQ_PATH_SEPARATOR + "< in >" + getFolderName() +"< is >" + Integer.toString(nrSlashesInArg) +"<.";
+            log(myName, Constants.DEBUG, myArea, logMessage);
+            // Users can specify wildcard % themselves
+            sqlMR =sqlMR.concat("\n AND t.object_path LIKE '" + Constants.IDQ_PATH_SEPARATOR + getFolderName() 
+                                + Constants.IDQ_PATH_SEPARATOR + "%'")
+                +("\n AND instr(t.object_path,'" + Constants.IDQ_PATH_SEPARATOR + "',1,"+ Integer.toString(3+nrSlashesInArg) +") =0");
+        }
+
+        if(!Constants.ALL.equalsIgnoreCase(getProfileName())) {
+            // Users can specify wildcard % themselves
+            sqlMR =sqlMR.concat(" AND t.child_type LIKE '" + getProfileName() + "'");
+        }
+
         profileList=profQuery.getQueryResult(sqlMR, sqlColumnsMRProfiles.size());
         myArea="Processing GetQueryResult";
         logMessage="Result from getQueryResult =>" + profileList.toString() +"<.";
@@ -230,13 +252,31 @@ public class Profile {
     profQuery.setDatabaseName(getDatabaseName());
     myArea="calling GetDatabaseTable";
     
-    if(getProjectName().equals(Constants.ALL)) {
+    if(getProjectName().equalsIgnoreCase(Constants.ALL)) {
         sqlMR=sqlMRProfiles;
         }
     else {
         //Add filter on project
         sqlMR=sqlMRProfiles +" AND p.project_name = '" + getProjectName() +"'";
     }
+
+    if(!Constants.ALL.equalsIgnoreCase(getFolderName())) {
+        int nrSlashesInArg= StringUtils.countMatches(getFolderName(),Constants.IDQ_PATH_SEPARATOR);
+        logMessage="Occurrences of >" + Constants.IDQ_PATH_SEPARATOR + "< in >" + getFolderName() +"< is >" + Integer.toString(nrSlashesInArg) +"<.";
+        log(myName, Constants.DEBUG, myArea, logMessage);
+        // Users can specify wildcard % themselves
+        sqlMR =sqlMR.concat("\n AND t.object_path LIKE '" + Constants.IDQ_PATH_SEPARATOR + getFolderName() 
+                            + Constants.IDQ_PATH_SEPARATOR + "%'")
+            +("\n AND instr(t.object_path,'" + Constants.IDQ_PATH_SEPARATOR + "',1,"+ Integer.toString(3+nrSlashesInArg) +") =0");
+    }
+
+    if(!Constants.ALL.equalsIgnoreCase(getProfileName())) {
+        // Users can specify wildcard % themselves
+        sqlMR =sqlMR.concat(" AND t.child_type LIKE '" + getProfileName() + "'");
+    }
+    
+    sqlMR = sqlMR.concat(" ORDER BY t.object_path");
+
     profiles=profQuery.getQueryResult(sqlMR, sqlColumnsMRProfiles.size());
     myArea="Processing GetQueryResult";
     logMessage="Result from getQueryResult =>" + profiles.toString() +"<.";
@@ -347,7 +387,7 @@ public class Profile {
     public void databaseName(String db) {
          setDatabaseName(db);
     }
-    private void setDatabaseName(String db) {
+    public void setDatabaseName(String db) {
         this.databaseName =db;
     }
     public String getDatabaseName() {
@@ -356,7 +396,7 @@ public class Profile {
     public void projectName(String proj) {
      setProjectName(proj);   
     }
-    private void setProjectName(String project) {
+    public void setProjectName(String project) {
         this.project=project;
     }
     public String getProjectName() {
@@ -398,7 +438,6 @@ public class Profile {
         String logMessage = Constants.NOT_INITIALIZED;
         boolean runProfiles=true;
         
-        
         if(onError.equalsIgnoreCase("not on error")) {
             if(getProfileListResult().equals(Constants.OK) && ! getNumberOfProfilesResult().equals(Constants.ERROR)) {
                 runProfiles=true;
@@ -411,21 +450,18 @@ public class Profile {
         
         if(runProfiles) {
             for(int i=0 ; i < profileList.size() ; i++) {
-            RunScript rs = new RunScript(Constants.RUNIDQPROFILE_SCRIPT,className + "-" + myName);
-            rs.setLogLevel(getLogLevel());
-            rs.setScriptLocation("scripts idq");
-                //TODO: Change this hard coded stuff
-                //TODO: The profile path is the 2nd one in the query !
-            String profilePath=profileList.get(i).get(1);
-            rs.addParameter(profilePath);
-            String rcSub=rs.runScriptReturnCode();
+                //the object path is the 2nd entry
+                //the profile name is the first entry
+                String profilePath=profileList.get(i).get(1);
+                String rcSub= refreshProfile(profilePath, profileList.get(i).get(0));
                 if(rcSub.equals(Constants.OK)) {
-                    logMessage="Profile >"+profilePath+"< completed successfully. Script return code =>" +rcSub+"<.";
-                    log(myName, Constants.OK,myArea,logMessage);
+                   logMessage="Profile >"+profilePath+"< completed successfully. Script return code =>" +rcSub+"<.";
+                   log(myName, Constants.OK,myArea,logMessage);
                 } else {
-                    logMessage="Profile >"+profilePath+"< failed. Script return code =>" +rcSub+"<.";
-                    log(myName, Constants.ERROR,myArea,logMessage);
-                    rc = Constants.ERROR;
+                   logMessage="Profile >"+profilePath+"< failed. Script return code =>" +rcSub+"<. Error: " + getErrorMessage();
+                   log(myName, Constants.ERROR,myArea,logMessage);
+                   rc = Constants.ERROR;
+                   setError(rc, logMessage);
                 }
             }
         } else {
@@ -438,6 +474,7 @@ public class Profile {
         this.profileListResult =result;
     }
     public String getProfileListResult() {
+        
         return profileListResult;
     }
 
@@ -446,6 +483,76 @@ public class Profile {
     }
     public String getNumberOfProfilesResult() {
         return numberOfProfilesResult;
+    }
+
+    public void folderName(String folderName) {
+        setFolderName(folderName);
+    }
+    public void setFolderName(String folderName) {
+        this.folderName =folderName;
+    }
+    public String getFolderName() {
+        return this.folderName;
+    }
+
+    public void profileName(String objectName) {
+        setFolderName(objectName);
+    }
+    public void setProfileName(String objectName) {
+        this.objectName =objectName;
+    }
+    public String getProfileName() {
+        return this.objectName;
+    }
+
+    public void scorecardName(String objectName) {
+        setFolderName(objectName);
+    }
+    public void setScorecardName(String objectName) {
+        this.objectName =objectName;
+    }
+    public String getScorecardName() {
+        return this.objectName;
+    }
+
+    public String getObjectName() {
+        return this.objectName;
+    }
+    public String refreshProfile() {
+        return refreshProfile(getObjectWithPath(), getProfileName());
+    }
+    
+    private String refreshProfile(String objectPath, String profileName) {
+        String myName="refreshProfile";
+
+        RunScript rs = new RunScript(Constants.RUNIDQPROFILE_SCRIPT,className + "-" + myName + "-" + profileName);
+        rs.setLogLevel(getLogLevel());
+        rs.setScriptLocation("scripts idq");
+        rs.setCaptureOutput(Constants.YES);
+        
+        rs.addParameter(objectPath);
+        rs.runScriptReturnCode();
+        
+        String errCode =parseScriptOutput(rs.getCapturedOutput());
+       
+        return errCode;
+        
+    }
+
+    private String getObjectWithPath() {
+        
+        return getProjectName() + Constants.IDQ_PATH_SEPARATOR + getFolderName() + Constants.IDQ_PATH_SEPARATOR
+            + getObjectName();
+    }
+
+    private String parseScriptOutput(String scriptOutput) {
+        if(scriptOutput.contains("failed with error"))
+          setError(Constants.ERROR,scriptOutput);
+        else
+          setError(Constants.OK,Constants.NOERRORS);
+        
+        return getErrorCode();
+        
     }
 
     static class ProfileStopTest extends Exception {

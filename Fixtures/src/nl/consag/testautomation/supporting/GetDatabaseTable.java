@@ -32,6 +32,9 @@ public class GetDatabaseTable {
     private String databaseName;
     private String databaseType;
     private String databaseConnDef;
+    private String tableOwner;
+    private String tableOwnerPassword;
+
 
     /**
      * @param context
@@ -60,6 +63,13 @@ public class GetDatabaseTable {
      * @return
      */
     public List<List<String>> getQueryResult (String query, int numberOfTableColumns){
+        return getQueryResult(query, numberOfTableColumns, false);
+    }
+    
+    /*
+     * 
+     */
+    public List<List<String>> getQueryResult (String query, int numberOfTableColumns, boolean useTableOwner){
                String myName="getQueryResult";
                String myArea="Initialization";
                String logMessage = Constants.NOT_INITIALIZED;
@@ -73,7 +83,15 @@ public class GetDatabaseTable {
                           
                try {
                             // Create a connection to the database
-                            connection = DriverManager.getConnection(url, userId, password);
+                   if(useTableOwner) {
+                       logMessage="Connecting to >" + url + "< with userid >" + tableOwner +"<.";
+                       log(myName, Constants.DEBUG, myArea, logMessage);
+                       connection = DriverManager.getConnection(url, tableOwner, tableOwnerPassword);
+                   } else {
+                       logMessage="Connecting to >" + url + "< with userid >" + tableOwner +"<.";
+                       log(myName, Constants.DEBUG, myArea, logMessage);
+                       connection = DriverManager.getConnection(url, userId, password);
+                   }
                             // createStatement() is used for create statement object that is used for sending sql statements to the specified database.
                             statement = connection.createStatement();
                             // sql query of string type to read database
@@ -130,6 +148,8 @@ public class GetDatabaseTable {
     url = GetParameters.GetDatabaseURL(databaseConnDef);
     userId = GetParameters.GetDatabaseUserName(databaseName);
     password = GetParameters.GetDatabaseUserPWD(databaseName);
+    tableOwner = GetParameters.GetDatabaseTableOwnerName(databaseName);
+    tableOwnerPassword =GetParameters.GetDatabaseTableOwnerPWD(databaseName);
 
     logMessage="databaseType >" + databaseType +"<.";       log(myName, Constants.VERBOSE, myArea, logMessage);
     logMessage="connection >" + databaseConnDef +"<.";       log(myName, Constants.VERBOSE, myArea, logMessage);
@@ -163,11 +183,9 @@ public class GetDatabaseTable {
     
     logLevel = Constants.logLevel.indexOf(level.toUpperCase());
     if (logLevel <0) {
-       log(myName, Constants.WARNING, myArea,"Wrong log level >" + level +"< specified. Defaulting to level 3.");
        logLevel =3;
     }
     
-    log(myName, Constants.INFO,myArea,"Log level has been set to >" + level +"< which is level >" +getIntLogLevel() + "<.");
     }
 
     /**

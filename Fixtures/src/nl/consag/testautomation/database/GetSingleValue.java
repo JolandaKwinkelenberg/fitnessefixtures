@@ -415,6 +415,9 @@ public class GetSingleValue {
     
     public String formatResult(String msg) {
         String formatted =msg;
+        /*
+         * need to compile for 1.6, so can't use switch :(
+         * 
         switch (resultFormat) {
         case Constants.RESULT_AS_HTML:
             formatted="<b>"+msg+"</b>";
@@ -424,6 +427,14 @@ public class GetSingleValue {
             break;
         default:
             break;
+        }
+*/
+        if(Constants.RESULT_AS_HTML.equals(resultFormat)) {
+            formatted="<b>"+msg+"</b>";
+        } else {
+            if(Constants.RESULT_AS_JSON.equals(resultFormat)) {
+                formatted="\"result\":\"" +msg +"\"";
+            }
         }
         return formatted;
     }
