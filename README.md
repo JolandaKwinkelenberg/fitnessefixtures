@@ -1,6 +1,6 @@
 # fitnessefixtures
 The FitNesse Fixtures in this repository are created as part of an overall solution for automating the test cycle.
-Visit http://fitnesse.solutions for more info and for downloads of compiled versions.
+Visit https://fitnesse.solutions for more info and for downloads of compiled versions.
 v2.3 fixture classes are available for download on https://consagservices.net/SpecificationByExample/downloads/v2.3
 download the zip files and unzip them in <installdir>/fixtures/bin.
 As of release 2.4 the fixtures are provided in a jar, ConsagFitNesseFixtures.jar, available as download on https://consagservices.net/SpecificationByExample/downloads/v2.4.
