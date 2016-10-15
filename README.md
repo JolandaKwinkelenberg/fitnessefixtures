@@ -11,3 +11,7 @@ The readme for Linux can be found in the directory 'linuxscripts', here on githu
 You can download the jar with all compiled fixtures from our fitnesse.solutions website: https://fitnesse.solutions/files/ConsagFitNesseFixtures.jar
 
 Note: Fixtures are compiled for Java 1.8
+
+## Fixtures in action
+
+Some fixtures can be seen in action on our fitnesse.solutions website: https://fitnesse.solutions/ConsagDemo, e.g. the fixture to start an Informatica PowerCenter workflow: https://fitnesse.solutions/ConsagDemo.StartWorkflow 
