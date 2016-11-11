@@ -24,3 +24,10 @@ Check Gist, here on github, for some examples:
 
 [Start Workflow example](https://gist.github.com/jacbeekers/2dd0c97d2b3f98457a1223af83341a09)
 
+## FitNesse Configuration
+Fixture rely on various parameters that need to be set up in properties files. Not all fixtures use all properties files.
+
+### Fixture: StartWorkflow
+* properties files used
+powercenter.properties, wsh.properties, appwsh.properties
+* Documentation and example: https://gist.github.com/jacbeekers/30e972aaecbb54dd0941568ee87cd6d4
