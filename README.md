@@ -26,8 +26,4 @@ Check Gist, here on github, for some examples:
 
 ## FitNesse Configuration
 Fixtures rely on various parameters that need to be set up in properties files. Not all fixtures use all properties files.
-
-### Fixture: StartWorkflow
-* properties files used
-powercenter.properties, wsh.properties, appwsh.properties
-* Documentation and example: https://gist.github.com/jacbeekers/30e972aaecbb54dd0941568ee87cd6d4
+Check our wiki for more information.
