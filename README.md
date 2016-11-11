@@ -19,5 +19,5 @@ Some fixtures can be seen in action on our fitnesse.solutions website: https://f
 ## Fixture documentation
 We're are working on it.
 Check Gist, here on github, for some examples:
-https://gist.github.com/jacbeekers/2dd0c97d2b3f98457a1223af83341a09
+[Start Workflow example](https://gist.github.com/jacbeekers/2dd0c97d2b3f98457a1223af83341a09)
 
