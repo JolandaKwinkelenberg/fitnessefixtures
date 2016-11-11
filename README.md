@@ -26,4 +26,4 @@ Check Gist, here on github, for some examples:
 
 ## FitNesse Configuration
 Fixtures rely on various parameters that need to be set up in properties files. Not all fixtures use all properties files.
-Check our wiki for more information.
+Check our [wiki](https://github.com/consag/fitnessefixtures/wiki/Fixture-configuration) for more information.
