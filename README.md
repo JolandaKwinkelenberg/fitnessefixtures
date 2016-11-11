@@ -12,6 +12,8 @@ You can download the jar with all compiled fixtures from our fitnesse.solutions 
 
 Note: Fixtures are compiled for Java 1.8
 
+If you're running FitNesse with Java 1.7 you will need the 1.7 jar: https://fitnesse.solutions/files/java17/ConsagFitNesseFixtures.jar
+
 ## Fixtures in action
 
 Some fixtures can be seen in action on our fitnesse.solutions website: https://fitnesse.solutions/ConsagDemo, e.g. the fixture to start an Informatica PowerCenter workflow: https://fitnesse.solutions/ConsagDemo.StartWorkflow 
