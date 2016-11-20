@@ -23,6 +23,7 @@ We're are working on it.
 Check Gist, here on github, for some examples:
 
 [Start Workflow example](https://gist.github.com/jacbeekers/2dd0c97d2b3f98457a1223af83341a09)
+[Stop Workflow exmaple](https://gist.github.com/jacbeekers/f26644b32de471b843f57ba14fe7af59)
 
 ## FitNesse Configuration
 Fixtures rely on various parameters that need to be set up in properties files. Not all fixtures use all properties files.
