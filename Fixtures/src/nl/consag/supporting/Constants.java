@@ -12,6 +12,7 @@ import java.util.List;
 
 public class Constants {
 
+    public static final String SF_CONNECTIONCACHEFILE="sf_access.json";
     public static final String DEFAULT_CLASS_PREFIX="nl.consag.testautomation";
     public static final String YES = "Yes";
     public static final String Y = "Y";
@@ -78,6 +79,7 @@ public class Constants {
     public static final String COLUMN_DELIMITER =",";
     public static final String FIELD_DELIMITER =";";
     public static final String APPPROP_DELIMITER =".";
+    public static final String IDQ_PATH_SEPARATOR ="/";
     
     // Location of config files
     public static final String CONFIGDIRECTORY="config/";
@@ -160,7 +162,7 @@ public class Constants {
     public static final boolean SIEBEL_NEWAFTER =true;
     
     // if Excel cell contains this value, ignore the field
-    public static final String SIEBEL_NULL_VALUE ="NULL";
+    public static final String SIEBEL_NULL_VALUE ="#NULL#";
     // optimize Siebel connections
     public static final String SIEBEL_NOTCONNECTED="Not Connected";
     // Siebel ViewModes
@@ -224,10 +226,21 @@ public class Constants {
     
     //Scripts
     public static final String RUNIDQPROFILE_SCRIPT="runidqprofile.sh";
+    public static final String RUNIDQMAPPING_SCRIPT="runidqmapping.sh";
+    
+    //Database type
+    public static final String DATABASETYPE_DB2 ="DB2";
+    public static final String DATABASETYPE_ORACLE ="Oracle";
+    public static final String DATABASETYPE_SQLSERVER ="SQLServer";
+    public static final String DATABASETYPE_NONSTOP ="Nonstop";
     
     //Informatica Process defaults
-    public static final String DEFAULT_ABORTONERROR=YES;
+    public static final String DEFAULT_ABORTONERROR=Constants.YES;
     public static final String PROP_ABORTONERROR="AbortOnError";
+
+    //Informatica ignore error defaults
+    public static final String DEFAULT_REPORTERRORIFNOTRUNNING=Constants.NO;
+    public static final String PROP_REPORTERRORIFNOTRUNNING="ReportErrorIfNotRunning";
     
     //FitNesse
     public static final String PARAM_RESULT_FORMAT="ResultFormat";
