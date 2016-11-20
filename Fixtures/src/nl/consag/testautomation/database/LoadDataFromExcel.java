@@ -31,7 +31,7 @@ import nl.consag.supporting.GetParameters;
 
 public class LoadDataFromExcel {
 
-    private static String version = "20160108.0";
+    private static String version = "20160727.0";
 
     private String className = "LoadDataFromExcel";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -169,14 +169,40 @@ public class LoadDataFromExcel {
                     log(myName, Constants.DEBUG, myArea, logMessage);
                     Attribute attribute = new Attribute();
                     attribute = tableExcelFile.get(row).get(cell);
-                    if (attribute.getFormat() == "NUMERIC") {
-                        preparedStatement.setDouble(bindVariableNo, attribute.getNumber());
+                    if (Constants.SIEBEL_NULL_VALUE.equals(attribute.getText())) {
+                        log(myName, Constants.DEBUG, myArea, "Null string detected. Setting columns to NULL.");
+                        switch (attribute.getFormat()) {
+                        case "NUMERIC":
+                            preparedStatement.setNull(bindVariableNo, Types.DOUBLE);
+                            break;
+                        case "DATE":
+                            preparedStatement.setNull(bindVariableNo, Types.DATE);
+                            break;
+                        default:
+                            preparedStatement.setNull(bindVariableNo, Types.VARCHAR);
+                            break;
+                        }
                     } else {
-                        if (attribute.getFormat() == "DATE") {
-                            java.sql.Timestamp timestamp = new java.sql.Timestamp(attribute.getDate().getTime());
-                            preparedStatement.setTimestamp(bindVariableNo, timestamp);
-                        } else { //String, boolean and others
-                            preparedStatement.setString(bindVariableNo, attribute.getText().trim());
+                        //at that time, we built for 1.6
+                        if (attribute.getFormat() == "NUMERIC") {
+                            preparedStatement.setDouble(bindVariableNo, attribute.getNumber());
+                        } else {
+                            if (attribute.getFormat() == "DATE") {
+                                java.sql.Timestamp timestamp = new java.sql.Timestamp(attribute.getDate().getTime());
+                                preparedStatement.setTimestamp(bindVariableNo, timestamp);
+                            } else { //String, boolean and others
+                                myArea="binding";
+                                log(myName, Constants.VERBOSE, myArea, "length >" + attribute.getText().length() +"<. getText =>" +attribute.getText() +"<.");
+                                log(myName, Constants.VERBOSE, myArea, "Trimmed length >" + attribute.getText().trim().length() +"<. getText Trimmed =>" +attribute.getText().trim() +"<.");
+                                if (Constants.DATABASETYPE_DB2.equals(getDatabaseType())) {
+                                    // JDBC Driver Db2 does not yet support setNString
+                                    log(myName, Constants.VERBOSE, myArea, "Database type is >" + getDatabaseType() +"<. Using setString.");
+                                    preparedStatement.setString(bindVariableNo, attribute.getText().trim());
+                                } else {
+                                    log(myName, Constants.VERBOSE, myArea, "Database type is >" + getDatabaseType() +"<. Using setNString.");
+                                    preparedStatement.setNString(bindVariableNo, attribute.getText().trim());
+                                }
+                            }
                         }
                     }
                     logMessage = "Done.";
@@ -264,7 +290,7 @@ public class LoadDataFromExcel {
         String logMessage = Constants.NO;
 
         databaseType = GetParameters.GetDatabaseType(databaseName);
-        logMessage = "Database type: " + databaseType;
+        logMessage = "Database type >" + databaseType +"<.";
         log(myName, Constants.INFO, myArea, logMessage);
 
         databaseConnDef = GetParameters.GetDatabaseConnectionDefinition(databaseName);
@@ -290,6 +316,10 @@ public class LoadDataFromExcel {
         password = GetParameters.GetDatabaseUserPWD(databaseName);
         logMessage = "Password for user >" + userId + "< retrieved.";
         log(myName, Constants.INFO, myArea, logMessage);
+    }
+    
+    public String getDatabaseType() {
+        return databaseType;
     }
 
     public String readExcelFile() {

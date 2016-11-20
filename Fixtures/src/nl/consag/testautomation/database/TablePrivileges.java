@@ -12,6 +12,7 @@ import java.util.*;
 import nl.consag.supporting.Constants;
 import nl.consag.supporting.Logging;
 import nl.consag.supporting.GetParameters;
+import nl.consag.testautomation.supporting.GetDatabaseTable;
 
 public class TablePrivileges {
 private String className = "TablePrivileges";
@@ -26,17 +27,11 @@ private String className = "TablePrivileges";
 	private String userId;
 	private String password;
 	private String databaseName;
-	private String query;
 	private String databaseType;
 	private String databaseConnDef;
         private String tableOwner;
         private String tableOwnerPassword;
-    private boolean ignoreErrorOnDrop =false;
         
-    private String tablePrefix = Constants.TABLE_PREFIX;
-    private String tableComment = Constants.TABLE_COMMENT;
-	private int NO_FITNESSE_ROWS_TO_SKIP = 3;
-
 
 	public TablePrivileges() {
 		//Constructors
@@ -57,14 +52,82 @@ private String className = "TablePrivileges";
 
 	    }
 
-    public void ignoreError(String yesNo) {
-        if(yesNo.equals(Constants.YES))
-            ignoreErrorOnDrop=true;
+    public TablePrivileges(String context, String logLevel) {
+            java.util.Date started = new java.util.Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+            startDate = sdf.format(started);
+            this.context=context;
+            setLogLevel(logLevel);
+            this.logLevel = getIntLogLevel();
+            logFileName = startDate + "." + className +"." + context;
+
+        }
+
+    public boolean userHasPrivilegeOnAllIn(String userName, String privilege, String objectType, String database) {
+        String myName="userHasPrivilegeOnAllIn";
+        String logMessage =Constants.NOERRORS;
+        String myArea ="init";
+        
+        List<List<String>> objectList =new ArrayList<List<String>>();
+        String query =Constants.NOT_PROVIDED;
+        int numberOfTableColumns =1;
+        boolean useTableOwner =true;
+        
+        myArea="Determine objectType";
+        if("tables".equalsIgnoreCase(objectType)) {
+            query="SELECT table_name FROM user_tables";
+        } else if("views".equalsIgnoreCase(objectType)) {
+            query="SELECT view_name FROM user_views";            
+        } else {
+            logMessage = "Invalid object type >" + objectType + "<.";
+            log(myName, Constants.ERROR, myArea, logMessage);
+            errorMessage=logMessage;
+            return false;
+        }
+        log(myName, Constants.INFO, myArea, "Object Type is >" +objectType +"<. Query will be >" +query +"<.");
+        
+        myArea="getObjectList";
+        GetDatabaseTable getObjectList = new GetDatabaseTable(context+"-"+myName, Integer.toString(logLevel));
+        getObjectList.setDatabaseName(database);
+        objectList=getObjectList.getQueryResult(query, numberOfTableColumns, useTableOwner);
+        if(Constants.ERROR.equals(getObjectList.getErrorCode())) {
+            log(myName, Constants.ERROR, myArea, "getObjectList returned >" +getObjectList.getErrorMessage() +"<.");
+            errorMessage=getObjectList.getErrorMessage();
+            return false;
+        }
+        
+        log(myName, Constants.INFO, myArea, "Number of objects in list is >" +objectList.size() +"<.");
+        
+        Iterator objectIterator = objectList.iterator();
+        List<String> object =new ArrayList<String>();
+        boolean privGranted =true;
+        int grantsOk =0;
+        int grantsNotOk =0;
+        while(objectIterator.hasNext()) {
+            object = (List<String>) objectIterator.next();
+            logMessage="Granting >" +privilege +"< on object >" +object.get(0) +"< to user >" +userName +"<.";
+            log(myName, Constants.INFO, myArea, logMessage);
+            privGranted =userHasPrivilegeOnObjectIn(userName, privilege, object.get(0), database);
+            if(privGranted) {
+                grantsOk++;
+                log(myName, Constants.INFO, myArea, "Granted.");
+            } else {
+                grantsNotOk++;
+                log(myName, Constants.INFO, myArea, "Grant failed. Error message: " +errorMessage);
+            }
+        }
+        
+        log(myName, Constants.INFO, myArea, "Successful grants: " +Integer.toString(grantsOk));
+        log(myName, Constants.INFO, myArea, "Unsuccessful grants: " +Integer.toString(grantsNotOk));
+        if(grantsNotOk >0) 
+            return false;
         else
-            ignoreErrorOnDrop=false;
+            return true;
+        
     }
-	
-    public boolean userHasPrivilegeOnObjectIn(String tgtDatabase, String inPrivilege, String inObjectName, String srcDatabase) {
+    
+    
+    public boolean userHasPrivilegeOnObjectIn(String userName, String privilege, String objectName, String database) {
         String myName="userHasPrivilegeOnObjectIn";
         String myArea="init";
         String logMessage=Constants.NOT_INITIALIZED;
@@ -72,18 +135,21 @@ private String className = "TablePrivileges";
         Statement statement = null;
         ResultSet rs = null;
         String sqlStatement=Constants.NOT_INITIALIZED;
-        String commentStatement=Constants.NOT_INITIALIZED;
         int sqlResult =0;
         boolean rc =false;
-        String commentFound=Constants.NOT_FOUND;
 
-        String objectName = tablePrefix + inObjectName;
-        databaseName=srcDatabase;
         myArea="check db type";
+        databaseName =database;
         readParameterFile();
         
+        if(Constants.NOT_FOUND.equals(databaseType)) {
+            logMessage="databaseType >" + databaseType +"<.";       log(myName, Constants.FATAL, myArea, logMessage);  
+            errorMessage=logMessage;
+            return false;
+        }
+        
         if("Oracle".equals(databaseType) || "DB2".equals(databaseType)) {
-            sqlStatement = "grant " + inPrivilege + " on " + objectName + " to " + GetParameters.GetDatabaseUserName(tgtDatabase);  
+            sqlStatement = "grant " + privilege + " on " + objectName + " to " + userName;  
         } else {
             logMessage="databaseType >" + databaseType +"< not yet supported";       log(myName, "info", myArea, logMessage);  
             errorMessage=logMessage;
@@ -93,14 +159,14 @@ private String className = "TablePrivileges";
         try {
         myArea="SQL Execution";
            logMessage = "Connecting to >" + databaseConnDef +"< using userID >" + tableOwner + "<.";
-           log(myName, "info", myArea, logMessage);
+           log(myName, Constants.INFO, myArea, logMessage);
                 connection = DriverManager.getConnection(url, tableOwner, tableOwnerPassword);      
                 statement = connection.createStatement();
                 logMessage="SQL >" + sqlStatement +"<.";
-                log(myName, "info", myArea, logMessage);
+                log(myName, Constants.INFO, myArea, logMessage);
                 sqlResult= statement.executeUpdate(sqlStatement);
             logMessage="SQL returned >" + Integer.toString(sqlResult) + "<.";
-           log(myName, "info", myArea, logMessage);
+           log(myName, Constants.INFO, myArea, logMessage);
 
           statement.close();
           connection.close();      
@@ -108,17 +174,12 @@ private String className = "TablePrivileges";
               }  catch (SQLException e) {
                 myArea="Exception handling";
                 logMessage = "SQLException at >" + myName + "<. Error =>" + e.toString() +"<.";
-                log(myName, "ERROR", myArea, logMessage);
+                log(myName, Constants.ERROR, myArea, logMessage);
                  rc =false;
                  errorMessage=logMessage;
               }
     
          return rc;
-    }
-    
-    public String objectNameFor (String inObjectName) {
-        return tablePrefix + inObjectName;
-
     }
     
     public String errorMessage() {
@@ -141,13 +202,19 @@ private String className = "TablePrivileges";
         tableOwner = GetParameters.GetDatabaseTableOwnerName(databaseName);
         tableOwnerPassword =GetParameters.GetDatabaseTableOwnerPWD(databaseName);
 
-        logMessage="databaseType >" + databaseType +"<.";       log(myName, "info", myArea, logMessage);
-        logMessage="connection >" + databaseConnDef +"<.";       log(myName, "info", myArea, logMessage);
-        logMessage="driver >" + driver +"<.";       log(myName, "info", myArea, logMessage);
-        logMessage="url >" + url +"<.";       log(myName, "info", myArea, logMessage);
-        logMessage="userId >" + userId +"<.";       log(myName, "info", myArea, logMessage);
-        logMessage="tblowner >" + tableOwner +"<."; log(myName, "info", myArea, logMessage);
-        
+        logMessage="databaseType >" + databaseType +"<.";       log(myName, Constants.DEBUG, myArea, logMessage);
+        logMessage="connection >" + databaseConnDef +"<.";       log(myName, Constants.DEBUG, myArea, logMessage);
+        logMessage="driver >" + driver +"<.";       log(myName, Constants.DEBUG, myArea, logMessage);
+        logMessage="url >" + url +"<.";       log(myName, Constants.DEBUG, myArea, logMessage);
+        logMessage="userId >" + userId +"<.";       log(myName, Constants.DEBUG, myArea, logMessage);
+        logMessage="tblowner >" + tableOwner +"<."; log(myName, Constants.DEBUG, myArea, logMessage);
+        if(Constants.NOT_FOUND.equals(tableOwnerPassword)) {
+            logMessage="tableOwnerPassword was not found.";
+        } else {
+            logMessage="tableOwnerPassword has been set.";
+        }
+        log(myName, Constants.DEBUG, myArea, logMessage);
+	    
 	}
 
     private void log(String name, String level, String location, String logText) {
@@ -169,16 +236,12 @@ private String className = "TablePrivileges";
     * @param level
     */
     public void setLogLevel(String level) {
-    String myName ="setLogLevel";
-    String myArea ="determineLevel";
     
     logLevel =Constants.logLevel.indexOf(level.toUpperCase());
     if (logLevel <0) {
-       log(myName, Constants.WARNING, myArea,"Wrong log level >" + level +"< specified. Defaulting to level 3.");
        logLevel =3;
     }
     
-    log(myName,Constants.INFO,myArea,"Log level has been set to >" + level +"< which is level >" +getIntLogLevel() + "<.");
     }
 
     /**

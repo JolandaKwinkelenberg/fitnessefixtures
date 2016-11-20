@@ -116,21 +116,20 @@ public class DropTable {
             }
         }
 
-//        GetSingleValue dbColc= new GetSingleValue(context);
-        dbCol.setDatabaseName(databaseName);
-        dbCol.setQuery(commentStatement);
-        commentFound = dbCol.getColumn();
+        if("Oracle".equals(databaseType)) {
+            dbCol.setDatabaseName(databaseName);
+            dbCol.setQuery(commentStatement);
+            commentFound = dbCol.getColumn();
         
-        if (commentFound == null || commentFound.isEmpty() || commentFound.equals("0")){
-            errorMessage="A table comment could not be found. If the table exists anyway, it will NOT be dropped.";
-            return false;
+            if (commentFound == null || commentFound.isEmpty() || commentFound.equals("0")){
+                errorMessage="A table comment could not be found. If the table exists, it will be dropped anyway.";
+            } else {
+                if( ! commentFound.equals(tableComment) ) {
+                    errorMessage="A table comment matching the comment issued by the CreateTable fixture was not found. The table will NOT be dropped.";
+                    return false;
+                }
+            }
         }
-        if( ! commentFound.equals(tableComment) ) {
-           errorMessage="A table comment matching the comment issued by the CreateTable fixture was not found. The table will NOT be dropped.";
-           return false;
-        }
-         
-         
          
         try {
         myArea="SQL Execution";

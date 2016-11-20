@@ -1,9 +1,10 @@
 /**
- * This purpose of this fixture is to call a PowerCenter workflow via a webservice call.
+ * This purpose of this fixture is to stop a PowerCenter workflow or instance via a webservice call.
  * The input parameters are provided by a table in the FitNesse wiki. 
+ * Based on StartWorkflow
  * @author Jac Beekers
- * @version 20160122.0
- * @since March 2014
+ * @version 20161120.0
+ * @since November 2016
  */
 package nl.consag.testautomation.powercenter;
 
@@ -29,10 +30,10 @@ import javax.xml.namespace.QName;
 import javax.xml.ws.WebServiceRef;
 
 
-public class StartWorkflow {
+public class StopWorkflow {
 
-    private static String version = "20160122.0";
-    private String className = "StartWorkflow";
+    private static String version = "20161120.0";
+    private String className = "StopWorkflow";
     private String logFileName = Constants.NOT_INITIALIZED;
     private String startDate = Constants.NOT_INITIALIZED;
     private String context = Constants.DEFAULT;
@@ -59,25 +60,29 @@ public class StartWorkflow {
 
     private String abortYesNo = Constants.YES;
     private boolean userSetAbortOnError = false;
+    private String reportErrorIfNotRunning = Constants.NO;
+    private boolean userSetReportErrorIfNotRunning = false;
 
     List<String> appProps = new ArrayList<String>();
-
 
     private String parameterFileName;
     private String parameterDirectory;
     //	protected String return_message = Constants.NOT_INITIALIZED;
-    private String workflowResult, FirstErr, LastErr, FirstErrCode, RowsTarget, RowsSource, Duration =
+    private String workflowResult, FirstErr, LastErr, FirstErrCode =
         Constants.NOT_INITIALIZED;
-    private int NumSrcFailedRows, NumSrcSuccessRows, NumDuration, NumTables, NumTgtFailedRows, NumTgtSuccessRows, NumTransErrors, NumEndTime, NumStartTime 
-        =0;
 
-    private int repeat=1;
+    private int numStartTime=0;
+    private int numEndTime=0;
+    private int numDuration=0;
+    
+    private String workflowInstance = Constants.NOT_PROVIDED;
+    
     List<String> iterationReturnCodes = new ArrayList<String>();
 
     @WebServiceRef
     private static MetadataService metadataService;
 
-    public StartWorkflow() {
+    public StopWorkflow() {
         // Constructor
         java.util.Date started = new java.util.Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -92,7 +97,7 @@ public class StartWorkflow {
     /**
      * @param context
      */
-    public StartWorkflow(String context) {
+    public StopWorkflow(String context) {
         // Constructor
         java.util.Date started = new java.util.Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -195,91 +200,6 @@ public class StartWorkflow {
         return FirstErrCode;
     }
     
-    /**
-     * @return
-     */
-    public String sourceRows() {
-        if (Constants.UNKNOWN.equals(RowsSource)) {
-            return Integer.toString(NumSrcSuccessRows);
-        } else {
-            return RowsSource;
-        }
-    }
-
-    /**
-     * @return
-     */
-    public String duration() {
-        NumDuration = NumEndTime - NumStartTime;
-        return Integer.toString(NumDuration);
-    }
-
-    /**
-     * @return
-     */
-    public String startTime() {
-        return Integer.toString(NumStartTime);
-    }
-
-    /**
-     * @return
-     */
-    public String endTime() {
-        return Integer.toString(NumEndTime);
-    }
-
-    /**
-     * @return
-     */
-    public String targetRows() {
-        if (Constants.UNKNOWN.equals(RowsTarget)) {
-            return Integer.toString(NumTgtSuccessRows);
-        } else {
-            return RowsTarget;
-        }
-    }
-
-    /**
-     * @return
-     */
-    public int sourceSuccessRows() {
-        return NumSrcSuccessRows;
-    }
-
-    /**
-     * @return
-     */
-    public int sourceFailedRows() {
-        return NumSrcFailedRows;
-    }
-
-    /**
-     * @return
-     */
-    public int numTables() {
-        return NumTables;
-    }
-
-    /**
-     * @return
-     */
-    public int targetFailedRows() {
-        return NumTgtFailedRows;
-    }
-
-    /**
-     * @return
-     */
-    public int targetSuccessRows() {
-        return NumTgtSuccessRows;
-    }
-
-    /**
-     * @return
-     */
-    public int tranformationErrors() {
-        return NumTransErrors;
-    }
 
     private String getSession() throws WorkflowStopTest {
         // create a session with PowerCenter web service hub
@@ -330,7 +250,7 @@ public class StartWorkflow {
             log(myName, Constants.FATAL, myArea, logCode);
             if (Constants.YES.equals(abortYesNo)) {
                 workflowResult = Constants.FATAL;
-                throw new WorkflowStopTest(logCode);
+                throw new WorkflowStopTest(logCode + " - " + e.toString());
             }
         }
 
@@ -422,16 +342,23 @@ public class StartWorkflow {
         return myReturnMsg;
     }
 
-
-
     /**
-     * @return
+     * @return Yes if workflow instance stopped
      * @throws Fault
      * @throws WorkflowStopTest
      */
-    public String workflowSuccessful() throws WorkflowStopTest {
-        // startWorkflow
-        String myName = "workflowSuccessful";
+    public String workflowInstanceStopped() throws WorkflowStopTest {
+        return workflowStopped();
+    
+    }
+
+    /**
+     * @return Yes if workflow stopped
+     * @throws Fault
+     * @throws WorkflowStopTest
+     */
+    public String workflowStopped() throws WorkflowStopTest {
+        String myName = "workflowStopped";
         String myArea = "init";
         String logMessage = "none";
         String sessionID = Constants.NOT_INITIALIZED;
@@ -461,6 +388,13 @@ public class StartWorkflow {
             log(myName, Constants.DEBUG, myArea, "AbortOnError has been set to >" + getAbortOnError() + "<.");
         }
 
+        if (userSetReportErrorIfNotRunning) {
+            log(myName, Constants.DEBUG, myArea, "User specified the ReportErrorIfNotRunning value >" + getReportErrorIfNotRunning() + "<.");
+        } else {
+            abortYesNo = getDefaultReportErrorIfNotRunning(getApplication());
+            log(myName, Constants.DEBUG, myArea, "ReportErrorIfNotRunning has been set to >" + getReportErrorIfNotRunning() + "<.");
+        }
+
         sessionID = getSession();
         if (Constants.FATAL.equals(sessionID) || Constants.ERROR.equals(sessionID)) {
             if (Constants.YES.equals(abortYesNo)) {
@@ -485,39 +419,6 @@ public class StartWorkflow {
         log(myName, Constants.VERBOSE, myArea, logMessage);
         wfRequest.setWorkflowName(workflowName);
 
-        if (parameterDirectory == null || parameterDirectory.isEmpty()) {
-            this.parameterDirectory = Constants.NOT_PROVIDED;
-            logMessage = "no parameter directory provided.";
-        } else {
-            logMessage = "Provided parameter directory =>" + parameterDirectory + "<.";
-        }
-        log(myName, Constants.DEBUG, myArea, logMessage);
-
-        if (parameterFileName == null || parameterFileName.isEmpty()) {
-            this.parameterFileName = Constants.NOT_PROVIDED;
-            logMessage = "no parameter file provided.";
-        } else {
-            logMessage = "parameter file =>" + parameterFileName + "<.";
-        }
-        log(myName, Constants.DEBUG, myArea, logMessage);
-
-
-        if (!(Constants.NOT_PROVIDED.equals(parameterDirectory) || Constants.NOT_PROVIDED.equals(parameterFileName))) {
-            String paramFile = DetermineCompleteFileName(parameterDirectory, parameterFileName);
-            logMessage = "Transformed parameter file name to =>" + paramFile + "<.";
-            log(myName, Constants.VERBOSE, myArea, logMessage);
-            if (directoryContainsFile(parameterDirectory, parameterFileName).equals("Yes")) {
-                wfRequest.setParameterFileName(paramFile);
-            } else {
-                logMessage = "Parameter file =>" + paramFile + "< could not be found.";
-                log(myName, Constants.FATAL, myArea, logMessage);
-                throw new WorkflowStopTest(logMessage);
-            }
-        } else {
-            logMessage = "ParameterFileName has not been set as no parameter file/directory had been specified.";
-            log(myName, Constants.INFO, myArea, logMessage);
-        }
-
         logMessage = "setting domain to =>" + domainName + "<.";
         log(myName, Constants.VERBOSE, myArea, logMessage);
         disi.setDomainName(domainName);
@@ -538,104 +439,106 @@ public class StartWorkflow {
         DataIntegrationInterface diInterface = diService.getDataIntegration();
 
         logMessage =
-            "starting workflow =>" + folder + "/" + workflowName + "< in domain =>" + domainName + " on IS =>" +
+            "Stopping workflow =>" + folder + "/" + workflowName + "< in domain =>" + domainName + " on IS =>" +
             serviceName + "<.";
         log(myName, Constants.INFO, myArea, logMessage);
         try {
-            diInterface.startWorkflow(wfRequest, sessHeader);
+            
+            if(Constants.NOT_PROVIDED.equals(getInstance())) {
+                logMessage="Stopping Workflow...";
+                log(myName, Constants.INFO, myArea, logMessage);
+            } else {
+                logMessage="Stopping workflow instance >" + getInstance() +"<.";
+                log(myName, Constants.INFO, myArea, logMessage);
+                wfRequest.setWorkflowRunInstanceName(getInstance());
+            }
+            diInterface.stopWorkflow(wfRequest, sessHeader);
+            diInterface.waitTillWorkflowComplete(wfRequest, sessHeader);
+
+            try {
+                WorkflowDetails wfDetails = diInterface.getWorkflowDetails(wfRequest, sessHeader);
+                DIServerDate endTime = wfDetails.getEndTime();
+                DIServerDate startTime = wfDetails.getStartTime();
+                numEndTime = endTime.getUTCTime();
+                numStartTime = startTime.getUTCTime();
+
+                wfErrorCode = wfDetails.getRunErrorCode();
+                wfErrorMsg = wfDetails.getRunErrorMessage();
+                logMessage = "After stop request, waited for workflow to complete. The workflow error code is >" + wfErrorCode + "<.";
+                log(myName, Constants.INFO, myArea, logMessage);
+                logMessage = "The workflow error message =>" + wfErrorMsg + "<.";
+                log(myName, Constants.INFO, myArea, logMessage);
+            } catch (Fault fault) {
+                handleInformaticaFault(myName, myArea, fault, Constants.ERROR);
+            }
+
         } catch (Fault fault) {
-            handleInformaticaFault(myName, myArea, fault, Constants.FATAL);
-            workflowResult = Constants.FATAL;
+            handleInformaticaFault(myName, myArea, fault, Constants.ERROR);
             if (Constants.YES.equals(abortYesNo)) {
-                throw new WorkflowStopTest("Workflow start exception occurred on workflow =>" + folder + "/" +
-                                           workflowName + "<.");
+                throw new WorkflowStopTest("Workflow stop exception occurred on workflow =>" + folder + "/" +
+                                           workflowName + "<. Error =>" + getWorkflowResult()+"<. Instance was >" +getInstance() +"<.");
             }
         } catch (Exception e) {
             logMessage =
-                "Exception starting workflow =>" + folder + "/" + workflowName + "< in domain =>" + domainName +
+                "Exception stopping workflow =>" + folder + "/" + workflowName + "< in domain =>" + domainName +
                 " on IS =>" + serviceName + "<.";
             log(myName, Constants.ERROR, myArea, logMessage);
             logMessage = "Exception =>" + e.toString() + "<.";
-            log(myName, Constants.FATAL, myArea, logMessage);
-            workflowResult = Constants.FATAL;
-            if (Constants.YES.equals(abortYesNo)) {
-                throw new WorkflowStopTest("Workflow start exception occurred on workflow =>" + folder + "/" +
-                                           workflowName + "<.");
-            }
-        }
-        try {
-            diInterface.waitTillWorkflowComplete(wfRequest, sessHeader);
-        } catch (Fault fault) {
-            handleInformaticaFault(myName, myArea, fault, Constants.ERROR);
-            //throw new WorkflowStopTest("Workflow >=" +folder+"/"+workflowName+"< failed.");
-        } catch (Exception e) {
-            logMessage =
-                "Exception waiting on completion of workflow =>" + folder + "/" + workflowName + "< in domain =>" +
-                domainName + " on IS =>" + serviceName + "<.";
             log(myName, Constants.ERROR, myArea, logMessage);
-            logMessage = "Exception =>" + e.toString() + "<.";
-            log(myName, Constants.FATAL, myArea, logMessage);
-            workflowResult = Constants.FATAL;
+            workflowResult = Constants.ERROR;
             if (Constants.YES.equals(abortYesNo)) {
-                throw new WorkflowStopTest("Waiting on workflow completion exception occurred on workflow >=" + folder +
-                                           "/" + workflowName + "<.");
+                throw new WorkflowStopTest("Workflow Stop exception occurred on workflow =>" + folder + "/" +
+                                           workflowName + "<. Error =>" + getWorkflowResult()+"<. Instance was >" +getInstance() +"<.");
             }
         }
-
-        myArea = "result determination";
-
-        try {
-            WorkflowDetails wfDetails = diInterface.getWorkflowDetails(wfRequest, sessHeader);
-            DIServerDate endTime = wfDetails.getEndTime();
-            DIServerDate startTime = wfDetails.getStartTime();
-            NumEndTime = endTime.getUTCTime();
-            NumStartTime = startTime.getUTCTime();
-
-            wfErrorCode = wfDetails.getRunErrorCode();
-            wfErrorMsg = wfDetails.getRunErrorMessage();
-            logMessage = "Workflow error code =>" + wfErrorCode + "<.";
-            log(myName, Constants.INFO, myArea, logMessage);
-            logMessage = "Workflow error message =>" + wfErrorMsg + "<.";
-            log(myName, Constants.INFO, myArea, logMessage);
-        } catch (Fault fault) {
-            handleInformaticaFault(myName, myArea, fault, Constants.ERROR);
-        }
-
-        if (wfErrorCode == 0 && workflowResult.equals(Constants.YES)) {
-
-            GetSessionStatisticsRequest sessStatReq = new GetSessionStatisticsRequest();
-            sessStatReq.setDIServiceInfo(disi);
-            sessStatReq.setFolderName(folder);
-            //                sessStatReq.setWorkflowName(workflowName);
-
-
-            /*Assume session name equals workflow name (prefix wf_ removeD). Also: no worklets supported
-        	String sessName ="s_" + workflowName.substring(3);
-        	sessStatReq.setTaskInstancePath(sessName);
-        	sessStatReq.setWorkflowName(workflowName);
-        	try {  SessionStatistics sessStat =diInterface.getSessionStatistics(sessStatReq, sessHeader);
-        		NumSrcFailedRows=sessStat.getNumSrcFailedRows();
-        		NumSrcSuccessRows=sessStat.getNumSrcSuccessRows();
-        		NumTables=sessStat.getNumTables();
-
-        		NumTgtFailedRows=sessStat.getNumTgtFailedRows();
-        		NumTgtSuccessRows=sessStat.getNumTgtSuccessRows();
-        		NumTransErrors=sessStat.getNumTransErrors();
-        	}
-        	catch (Fault fault) {
-        		logMessage="Could not determine session level results. Likely the session name is different from the workflow name =>" +workflowName +"<.";
-        		log(myName, Constants.WARNING, myArea, logMessage);
-                        workflowResult=Constants.WARNING;
-        	}
-*/
-        }
-
         myArea = "finalization";
         closeSession(sessionID);
 
-        logMessage = "end of =>" + myName + "<. returning =>" + workflowResult + "<.";
+        logMessage = "end of =>" + myName + "<. returning =>" + getWorkflowResult() + "<.";
         log(myName, Constants.DEBUG, myArea, logMessage);
+        return getWorkflowResult();
+    }
+    
+
+    private String getWorkflowResult() {
+
+        switch (workflowResult) {
+        case "LMWSH_95219":
+            if (Constants.NO.equals(getReportErrorIfNotRunning())) {
+                workflowResult=Constants.YES;
+                    } else {
+                workflowResult="Not Running";
+                }
+            break;
+        default:
+            break;
+        }
+
         return workflowResult;
+    }
+    
+    public String getReportErrorIfNotRunning() {
+        return reportErrorIfNotRunning;
+    }
+    
+    public void setReportErrorIfNotRunning(String reportErrorIfNotRunning) throws WorkflowStopTest {
+        //Function to set abort on error, i.e. if workflowstoptest should be thrown in case of exceptions
+        userSetReportErrorIfNotRunning = true;
+        if (reportErrorIfNotRunning == null || reportErrorIfNotRunning.isEmpty()) {
+            this.reportErrorIfNotRunning = Constants.DEFAULT_REPORTERRORIFNOTRUNNING;
+        } else {
+            if (Constants.YES.equals(reportErrorIfNotRunning) || Constants.NO.equals(reportErrorIfNotRunning)) {
+                this.reportErrorIfNotRunning = reportErrorIfNotRunning;
+            } else {
+                String myName = "setReportErrorIfNotRunning";
+                String myArea = "Error";
+                String logMessage =
+                    "Invalid value =>" + reportErrorIfNotRunning + "< specified for 'report error if not running'. Must be =>" + Constants.YES +
+                    "< or =>" + Constants.NO + "<.";
+                log(myName, Constants.FATAL, myArea, logMessage);
+                throw new WorkflowStopTest(logMessage);
+            }
+        }
     }
 
     private void resetWFInfo() {
@@ -643,18 +546,9 @@ public class StartWorkflow {
         FirstErr = Constants.NOERRORS;
         LastErr = Constants.NOERRORS;
         FirstErrCode = Constants.NOERRORS;
-        RowsTarget = Constants.NOT_INITIALIZED;
-        RowsSource = Constants.NOT_INITIALIZED;
-        Duration = Constants.NOT_INITIALIZED;
-        NumSrcFailedRows = 0;
-        NumSrcSuccessRows = 0;
-        NumDuration = 0;
-        NumTables = 0;
-        NumTgtFailedRows = 0;
-        NumTgtSuccessRows = 0;
-        NumTransErrors = 0;
-        NumEndTime = 0;
-        NumStartTime = 0;
+        numEndTime = 0;
+        numStartTime = 0;
+        numDuration =0;
     }
 
     private String DetermineCompleteFileName(String directory, String fileName) {
@@ -750,7 +644,7 @@ public class StartWorkflow {
         log(myName, Constants.ERROR, myArea, logMessage);
         setError(faultDetails.getErrorCode(), fault.toString());
         myArea = "finalizing";
-        logMessage = "error handling completed.";
+        logMessage = "error handling completed. Result set to >" + getErrorCode() +"<.";
         log(myName, Constants.INFO, myArea, logMessage);
 
         workflowResult = getErrorCode();
@@ -895,6 +789,29 @@ public class StartWorkflow {
 
     }
 
+    private String getDefaultReportErrorIfNotRunning(String appName) {
+        String myName = "getDefaultReportErrorIfNotRunning";
+        String myArea = "init";
+        String yesNo = getPropValue(appName.concat(Constants.APPPROP_DELIMITER).concat(Constants.PROP_REPORTERRORIFNOTRUNNING));
+
+        if (Constants.NOT_FOUND.equals(yesNo)) {
+            log(myName, Constants.DEBUG, myArea,
+                "Default AbortOnError value for application >" + appName + "< not found." + " System default value >" +
+                Constants.DEFAULT_REPORTERRORIFNOTRUNNING + "< will be used.");
+            return Constants.DEFAULT_REPORTERRORIFNOTRUNNING;
+        } else {
+            if (Constants.YES.equals(yesNo) || Constants.NO.equals(yesNo)) {
+                return yesNo;
+            } else {
+                log(myName, Constants.DEBUG, myArea,
+                    "Default ReportErrorIfNotRunning value for application >" + appName + "< has a wrong value >" + yesNo + "<." +
+                    " System default value >" + Constants.DEFAULT_REPORTERRORIFNOTRUNNING + "< will be used.");
+                return Constants.DEFAULT_REPORTERRORIFNOTRUNNING;
+            }
+        }
+
+    }
+
     private String getPropValue(String appProp) {
         String myName = "getPropValue";
         String myArea = "init";
@@ -916,95 +833,40 @@ public class StartWorkflow {
         return version;
     }
 
+    /**
+     * @return
+     */
+    public String duration() {
+        numDuration = numEndTime - numStartTime;
+        return Integer.toString(numDuration);
+    }
 
-    public String setRepeat(String repeat) {
-        this.repeat =Integer.parseInt(repeat);
+    /**
+     * @return
+     */
+    public String startTime() {
+        return Integer.toString(numStartTime);
+    }
+
+    /**
+     * @return
+     */
+    public String endTime() {
+        return Integer.toString(numEndTime);
+    }
+
+    public void setInstance(String wfInstance) {
+        String myName="setInstance";
+        String myArea="init";
         
-        return Constants.NOT_IMPLEMENTED;
+        this.workflowInstance =wfInstance;
+        log(myName, Constants.DEBUG, myArea, "Instance set to >" + this.workflowInstance + "<.");
+    }
+
+    public String getInstance() {
+        return this.workflowInstance;
     }
     
-    public String getRepeat(){
-        return Integer.toString(repeat);
-    }
-
-    public String allWorkflowsSuccessful() throws WorkflowStopTest {
-        String myName ="allWorkflowsSuccessful";
-        String myArea ="init";
-        String logMessage =Constants.OK;
-        String overallReturnCode =Constants.YES;
-        String latestReturnCode =Constants.YES;
-        
-        logMessage = "Start.";
-        log(myName, Constants.DEBUG, myArea, logMessage);
-
-        readParameterFile();
-        readInfaProcessProperties();
-
-        myArea="running";
-        for(int i=0 ; i < repeat ; i++) {
-            String thisRunReturnCode =Constants.OK;
-            logMessage = "Iteration >" + Integer.toString(i+1) +"<.";
-            log(myName, Constants.DEBUG, myArea, logMessage);
-            
-            thisRunReturnCode = workflowSuccessful();
-            
-            logMessage ="Iteration >" + Integer.toString(i+1) +"< returned >" + thisRunReturnCode +"<.";
-            log(myName, Constants.DEBUG, myArea, logMessage);
-            
-            setReturnCodeForIteration(i,thisRunReturnCode);
-            if(! Constants.YES.equals(thisRunReturnCode)) {
-                overallReturnCode =Constants.ERROR;
-                latestReturnCode =thisRunReturnCode;
-                if(getAbortOnError().equals(Constants.YES)) {
-                    throw new WorkflowStopTest(logMessage);
-                }
-            }
-        }
-
-        myArea="completion";
-        
-        logMessage = "End with return code >" +overallReturnCode +"<.";
-        log(myName, Constants.DEBUG, myArea, logMessage);
-
-        return overallReturnCode;
-        
-    }
-
-    private void setReturnCodeForIteration(int iteration, String iterationReturnCode) {
-        iterationReturnCodes.add(iteration, iterationReturnCode);
-    }
-
-    public String getReturnCodeForIteration(String iteration) {
-        String myName="getReturnCodeForIteration";
-        String myArea="run";
-        String logMessage=Constants.OK;
-        int nrIteration =1;
-        String rc =Constants.YES;
-        
-        try {
-           nrIteration =Integer.parseInt(iteration);
-        }
-        catch (NumberFormatException e) {
-            logMessage ="Invalid iteration value >" + iteration +"< specified. Must be numeric";
-            log(myName, Constants.FATAL, myArea, logMessage);   
-            return "Non-numeric iteration number specified";
-        }
-
-        if(nrIteration > iterationReturnCodes.size()) {
-            logMessage ="Invalid iteration value >" + iteration 
-                        +"< specified. Number of iterations with a return code =>" +Integer.toString(iterationReturnCodes.size()) +"<.";
-            log(myName, Constants.ERROR, myArea, logMessage);   
-            return "Iteration not found";
-        }
-        
-        rc =iterationReturnCodes.get(nrIteration);
-        logMessage ="Iteration >" +iteration +"< has return code >" +rc +"<.";
-        log(myName, Constants.FATAL, myArea, logMessage);   
-
-        return rc;
-        
-    }
-
     static class WorkflowStopTest extends Exception {
         @SuppressWarnings("compatibility:849567740548138166")
         static final long serialVersionUID = 34985952947L;

@@ -1,8 +1,8 @@
 /**
- * This purpose of this fixture is to provide information on Informatica DQ Profiles
+ * This purpose of this fixture is to run Informatica DQ Mappings
  * @author Jac Beekers
- * @since 10 May 2015
- * @version 20160705.0 - Filter on specific folder, user can use wildcards. Added filter on profile name
+ * @since 12 July 2016
+ * @version 20160712.0 - initial version
  */
 package nl.consag.testautomation.informatica;
 
@@ -23,9 +23,9 @@ import nl.consag.testautomation.scripts.RunScript;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class Profile {
+public class Mapping {
 
-    private String className = "Profile";
+    private String className = "Mapping";
     private String logFileName = Constants.NOT_INITIALIZED;
     private String startDate = Constants.NOT_INITIALIZED;
     private String context = Constants.DEFAULT;
@@ -57,30 +57,14 @@ public class Profile {
     public static final List<String> sqlColumnsMRProfiles = Collections.unmodifiableList(Arrays.asList(
         "Profile Name", "Folder Path","Project Name","Object Type"));
 
-
-    private String sqlMRScorecards ="SELECT /* FitNesse Fixture Profile (c) Consag Consultancy Services B.V. */ " +
-        "A.POS_NAME AS SCORECARD_NAME,\n" + 
-    "  P.PROJECT_NAME||T.OBJECT_PATH   AS FOLDER_PATH,\n" + 
-    "  P.PROJECT_NAME  AS PROJECT_NAME,\n" + 
-    "  'Scorecard' AS OBJECT_TYPE\n" + 
-    "FROM MRX_PROJECTS P,\n" + 
-    "  MRX_PARENT_OBJECTS T,\n" + 
-    "  PO_SCORECARD A\n" + 
-    "WHERE T.CHILD_TYPE LIKE 'com.informatica.profiling.services.model.persist.scorecard.impl.ScorecardImpl'\n" + 
-    "AND P.PROJECT_NAME IS NOT NULL\n" + 
-    "AND T.CHILD_TYPE   IS NOT NULL\n" + 
-    "AND T.ROOT_CID      = P.FOLDER_CID\n" + 
-    "AND A.PSS_OPID      = T.CHILD_PID";
-    public static final List<String> sqlColumnsMRScorecards = Collections.unmodifiableList(Arrays.asList(
-        "Scorecard Name", "Folder Path","Project Name","Object Type"));
-
     private String databaseName = Constants.NOT_INITIALIZED;
     private String project = Constants.NOT_PROVIDED;
     private String folderName = Constants.ALL;
-    private String objectName = Constants.ALL;
+    private String mappingName = Constants.ALL;
+    private String applicationName = Constants.NOT_PROVIDED;
 
 
-    public Profile() {
+    public Mapping() {
     // Constructor
             java.util.Date started = new java.util.Date();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -93,7 +77,7 @@ public class Profile {
     /**
     * @param databaseName
     */
-    public Profile(String databaseName) {
+    public Mapping(String databaseName) {
     // Constructor
     java.util.Date started = new java.util.Date();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -108,7 +92,7 @@ public class Profile {
     /**
     * @param 
     */
-    public Profile(String databaseName, String project) {
+    public Mapping(String databaseName, String project) {
     // Constructor
     java.util.Date started = new java.util.Date();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -123,7 +107,7 @@ public class Profile {
     /**
     * @param context
     */
-    public Profile(String databaseName, String project, String loglevel) {
+    public Mapping(String databaseName, String project, String loglevel) {
     // Constructor
     java.util.Date started = new java.util.Date();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -204,9 +188,9 @@ public class Profile {
                 +("\n AND instr(t.object_path,'" + Constants.IDQ_PATH_SEPARATOR + "',1,"+ Integer.toString(3+nrSlashesInArg) +") =0");
         }
 
-        if(!Constants.ALL.equalsIgnoreCase(getProfileName())) {
+        if(!Constants.ALL.equalsIgnoreCase(getMappingName())) {
             // Users can specify wildcard % themselves
-            sqlMR =sqlMR.concat(" AND t.child_type LIKE '" + getProfileName() + "'");
+            sqlMR =sqlMR.concat(" AND t.child_type LIKE '" + getMappingName() + "'");
         }
 
         profileList=profQuery.getQueryResult(sqlMR, sqlColumnsMRProfiles.size());
@@ -270,9 +254,9 @@ public class Profile {
             +("\n AND instr(t.object_path,'" + Constants.IDQ_PATH_SEPARATOR + "',1,"+ Integer.toString(3+nrSlashesInArg) +") =0");
     }
 
-    if(!Constants.ALL.equalsIgnoreCase(getProfileName())) {
+    if(!Constants.ALL.equalsIgnoreCase(getMappingName())) {
         // Users can specify wildcard % themselves
-        sqlMR =sqlMR.concat(" AND t.child_type LIKE '" + getProfileName() + "'");
+        sqlMR =sqlMR.concat(" AND t.child_type LIKE '" + getMappingName() + "'");
     }
     
     sqlMR = sqlMR.concat(" ORDER BY t.object_path");
@@ -453,7 +437,7 @@ public class Profile {
                 //the object path is the 2nd entry
                 //the profile name is the first entry
                 String profilePath=profileList.get(i).get(1);
-                String rcSub= refreshProfile(profilePath, profileList.get(i).get(0));
+                String rcSub= runMapping(profilePath, profileList.get(i).get(0));
                 if(rcSub.equals(Constants.OK)) {
                    logMessage="Profile >"+profilePath+"< completed successfully. Script return code =>" +rcSub+"<.";
                    log(myName, Constants.OK,myArea,logMessage);
@@ -495,58 +479,72 @@ public class Profile {
         return this.folderName;
     }
 
-    public void profileName(String objectName) {
-        setFolderName(objectName);
+    public void setMappingName(String mappingName) {
+        this.mappingName =mappingName;
     }
-    public void setProfileName(String objectName) {
-        this.objectName =objectName;
-    }
-    public String getProfileName() {
-        return this.objectName;
+    public String getMappingName() {
+        return this.mappingName;
     }
 
-    public void scorecardName(String objectName) {
-        setFolderName(objectName);
+    public void setApplicationName(String appName) {
+        this.applicationName =appName;
     }
-    public void setScorecardName(String objectName) {
-        this.objectName =objectName;
-    }
-    public String getScorecardName() {
-        return this.objectName;
+    public String getApplicationName() {
+        return this.applicationName;
     }
 
-    public String getObjectName() {
-        return this.objectName;
-    }
-    public String refreshProfile() {
-        return refreshProfile(getObjectWithPath(), getProfileName());
+    public String runMapping() {
+        return runMapping(getObjectWithPath(), getMappingName());
     }
     
-    private String refreshProfile(String objectPath, String profileName) {
-        String myName="refreshProfile";
+    private String runMapping(String objectPath, String mappingName) {
+        String myName="runMapping";
+        String myArea ="init";
+                                 
+        String logMessage="Run mapping >" + mappingName +"< with path >" + objectPath +"<.";
+            log(myName, Constants.DEBUG,myArea,logMessage);
 
-        RunScript rs = new RunScript(Constants.RUNIDQPROFILE_SCRIPT,className + "-" + myName + "-" + profileName);
+        RunScript rs = new RunScript(Constants.RUNIDQMAPPING_SCRIPT,className + "-" + myName + "-" + mappingName);
         rs.setLogLevel(getLogLevel());
         rs.setScriptLocation("scripts idq");
         rs.setCaptureOutput(Constants.YES);
+        rs.setCaptureErrors(Constants.YES);
         
-        rs.addParameter(objectPath);
+        rs.addParameter(getApplicationName());
+        rs.addParameter(getMappingName());
         rs.runScriptReturnCode();
         
-        String errCode =parseScriptOutput(rs.getCapturedOutput());
-       
-        return errCode;
+        String outCode =parseScriptOutput(rs.getCapturedOutput());
+        String errCode =parseScriptOutput(rs.getCapturedErrors());
+        String rsCode=rs.getErrorCode();
+        
+        if (Constants.OK.equals(outCode)) {
+            if(Constants.OK.equals(errCode))
+            return rsCode;
+            else {
+                setError(errCode,rs.getErrorMessage());
+                return errCode;
+            }
+        }
+        return outCode;
         
     }
 
     private String getObjectWithPath() {
         
         return getProjectName() + Constants.IDQ_PATH_SEPARATOR + getFolderName() + Constants.IDQ_PATH_SEPARATOR
-            + getObjectName();
+            + getMappingName();
     }
 
     private String parseScriptOutput(String scriptOutput) {
-        if(scriptOutput.contains("failed with error"))
+        String myName ="parseScriptOutput";
+        String myArea ="init";
+                                 
+        String logMessage="Parsing script output for errors in >" + scriptOutput +"<.";
+            log(myName, Constants.DEBUG,myArea,logMessage);
+
+        if(scriptOutput.contains("failed with error")
+            || scriptOutput.contains("IOException"))
           setError(Constants.ERROR,scriptOutput);
         else
           setError(Constants.OK,Constants.NOERRORS);
