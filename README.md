@@ -8,11 +8,9 @@ The readme for Linux can be found in the directory 'linuxscripts', here on githu
 
 
 ## Download
-You can download the jar with all compiled fixtures from our fitnesse.solutions website: https://fitnesse.solutions/files/ConsagFitNesseFixtures.jar
+You can download the jar with all compiled fixtures from the release tab.
 
-Note: Fixtures are compiled for Java 1.8
-
-If you're running FitNesse with Java 1.7 you will need the 1.7 jar: https://fitnesse.solutions/files/java17/ConsagFitNesseFixtures.jar
+Fall 2016 release: https://github.com/consag/fitnessefixtures/releases/download/Fall2016/ConsagFitNesseFixtures.jar
 
 ## Fixtures in action
 
