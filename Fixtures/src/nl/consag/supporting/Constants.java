@@ -12,6 +12,12 @@ import java.util.List;
 
 public class Constants {
 
+    public static final String FITNESSE_PREFIX_REPORT="report:";    // typically no color
+    public static final String FITNESSE_PREFIX_PASS="pass:";        // typically green
+    public static final String FITNESSE_PREFIX_FAIL="fail:";        // typically red
+    public static final String FITNESSE_PREFIX_IGNORE="ignore:";    // typically blue
+    public static final String FITNESSE_PREFIX_ERROR="error:";      // typically yellow
+    
     public static final String SF_CONNECTIONCACHEFILE="sf_access.json";
     public static final String DEFAULT_CLASS_PREFIX="nl.consag.testautomation";
     public static final String YES = "Yes";
@@ -80,6 +86,7 @@ public class Constants {
     public static final String FIELD_DELIMITER =";";
     public static final String APPPROP_DELIMITER =".";
     public static final String IDQ_PATH_SEPARATOR ="/";
+    public static final String FITNESSE_DELIMITER ="|";
     
     // Location of config files
     public static final String CONFIGDIRECTORY="config/";
@@ -248,7 +255,12 @@ public class Constants {
     public static final String RESULT_AS_JSON="json";
     public static final String DEFAULT_RESULT_FORMAT=RESULT_AS_HTML;
     public static final List<String> resultFormats = Collections.unmodifiableList(Arrays.asList(RESULT_AS_HTML
-                                                                                                 ,RESULT_AS_JSON
-                                                                                                 ));
+                                                                                                 ,RESULT_AS_JSON));
+    
+    public static final String JOB_DIR="jobs/";
+    public static final String JOB_COLUMN_SEPARATOR="|";
+    
+    public static final String ERRCODE_INVALID_LOCATION="InvalidLogicalLocation";
+    public static final String ERROR_INVALID_LOCATION="An invalid logical location was specified.";
                                                   
 }
