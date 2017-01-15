@@ -25,6 +25,9 @@ public class GetParameters {
   private static int iWshUrl=1;
   private static int iRootDirIndex=1;
   
+  private static String errMsg=Constants.NOERRORS;
+  private static String errCode=Constants.NOERRORS;
+  
   public static String GetPhysicalSourceDir(String logical) {
       return getPropertyVal(Constants.DIRECTORY_PROPERTIES, logical);
   }
@@ -228,6 +231,7 @@ public class GetParameters {
      */
     public static String getPropertyVal(String propFile, String prop) {
         String val = Constants.NOT_FOUND;
+        setError(Constants.OK, Constants.NOERRORS);
         /*
          * Get mapping
          */
@@ -239,13 +243,35 @@ public class GetParameters {
         fileInput.close();
         
         val = schedProp.getProperty(prop, Constants.NOT_FOUND);
+        setError(Constants.OK, Constants.NOERRORS);
+            
         } catch (FileNotFoundException e) {
             val = Constants.NOT_FOUND;
+            setError(Constants.ERROR, "Properties file >" + propFile + "< not found.");
             } catch (IOException e) {
                 val = Constants.NOT_FOUND;
+                setError(Constants.ERROR ,"Error reading properties file >" + propFile + "<.");
             }
         return val;
     }
 
+    private static void setError(String errcode, String errmsg) {
+        setErrorMessage(errmsg);
+        setErrorCode(errcode);
+    }
+    
+    private static void setErrorMessage(String errmsg) {
+        errMsg =errmsg;
+    }
+    private static void setErrorCode(String errcode) {
+        errCode =errcode;
+    }
+    
+    public static String getErrorMessage() {
+        return errMsg;
+    }
+    public static String getErrorCode() {
+        return errCode;
+    }
   
 }
