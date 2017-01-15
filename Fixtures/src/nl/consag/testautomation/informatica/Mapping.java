@@ -3,6 +3,7 @@
  * @author Jac Beekers
  * @since 12 July 2016
  * @version 20160712.0 - initial version
+ * @version 20170107.0 - RunScript introduced StopTest
  */
 package nl.consag.testautomation.informatica;
 
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import nl.consag.supporting.Constants;
+import nl.consag.supporting.GetParameters;
 import nl.consag.testautomation.supporting.GetDatabaseTable;
 
 //import static supporting.ListUtility.list;
@@ -21,15 +23,19 @@ import nl.consag.supporting.Logging;
 
 import nl.consag.testautomation.scripts.RunScript;
 
+import nl.consag.testautomation.scripts.RunScript.RunScriptStopTest;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class Mapping {
+    private static final String version = "20170108.0";
 
     private String className = "Mapping";
     private String logFileName = Constants.NOT_INITIALIZED;
     private String startDate = Constants.NOT_INITIALIZED;
     private String context = Constants.DEFAULT;
-    private Integer logLevel =3;
+    private int logLevel =3;
+    private int logEntries =0;
     private String abortYesNo = Constants.YES;
     private String errorCode = Constants.OK;
     private String errorMessage = Constants.OK;
@@ -63,6 +69,10 @@ public class Mapping {
     private String mappingName = Constants.ALL;
     private String applicationName = Constants.NOT_PROVIDED;
 
+    private String logUrl=Constants.LOG_DIR;
+    private String resultFormat =Constants.DEFAULT_RESULT_FORMAT;
+
+    private boolean userSetAbortOnError = false;
 
     public Mapping() {
     // Constructor
@@ -119,29 +129,6 @@ public class Mapping {
         logFileName = startDate + "." + className +"." +this.databaseName +"." +this.project;
 
     }
-
-    /**
-    * @param abortYesNo
-    * @throws WorkflowStopTest
-    */
-    public void setAbortOnError(String abortYesNo) throws ProfileStopTest {
-            //Function to set abort on error, i.e. if workflowstoptest should be thrown in case of exceptions
-        if(abortYesNo == null || abortYesNo.isEmpty()) {
-        this.abortYesNo = Constants.YES;
-        } 
-        else {
-            if (Constants.YES.equals(abortYesNo) || Constants.NO.equals(abortYesNo)) {
-                    this.abortYesNo = abortYesNo;          
-            } 
-            else {
-                    String myName="setAbortOnError";
-                    String myArea="Error";
-                    String logMessage="Invalid value =>" + abortYesNo + "< specified for abort on error. Must be =>" + Constants.YES +"< or =>" + Constants.NO +"<.";
-                    log(myName, Constants.FATAL, myArea, logMessage);
-                    throw new ProfileStopTest(logMessage);
-            }
-        }
-      }
 
 
     /*
@@ -223,7 +210,7 @@ public class Mapping {
     /**
      * @return
      */
-    public List<List<List<String>>> query() {
+    public List<List<List<String>>> query() throws MappingStopTest {
     String myName="query";
     String myArea="init";
     String logMessage = Constants.NOT_INITIALIZED;
@@ -275,8 +262,11 @@ public class Mapping {
      * Need to match query result (rows with column values) to columns as expected in FitNesse test page
      * Each column value must be preceded with the column name. For each record.
      */
-    private List<List<List<String>>> createResultSet(List<List<String>> queryResult, List<String> colNames) {
+    private List<List<List<String>>> createResultSet(List<List<String>> queryResult, List<String> colNames) throws MappingStopTest {
         String myName="createResultSet";
+        String myArea="init";
+        String logMessage=Constants.NOT_INITIALIZED;
+        
         List<List<List<String>>> out = new ArrayList<List<List<String>>>();
         
         for(List<String> row : queryResult) {
@@ -299,8 +289,21 @@ public class Mapping {
                 rs.setLogLevel(getLogLevel());
                 rs.setScriptLocation("scripts idq");
                 rs.addParameter(currentProfilePathName);
-                String rc=rs.runScriptReturnCode();
-                colAndVal.add(rc);
+                String rc;
+                try {
+                    rc = rs.runScriptReturnCode();
+                    colAndVal.add(rc);
+                } catch (RunScriptStopTest e) {
+                    myArea="Processing script returncode";
+                    logMessage="Result from RunScript =>" + e.toString() +"<.";
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    setError(rs.getErrorCode(),rs.getErrorMessage());
+
+                    if (Constants.YES.equals(getAbortOnError())) {
+                        throw new MappingStopTest(getErrorMessage());
+                    }
+
+                }
                 rowColValPairs.add(colAndVal);
             }
             out.add(rowColValPairs);
@@ -310,20 +313,26 @@ public class Mapping {
         return out;
     }
     
-    private void log(String name, String level, String area, String logMessage) {
-        
+    private void log(String name, String level, String location, String logText) {
         if(Constants.logLevel.indexOf(level.toUpperCase()) > getIntLogLevel()) {
-            return;
+               return;
+        }
+        logEntries++;
+        if(logEntries ==1) {
+        Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());                 
         }
 
-        Logging.LogEntry(logFileName, name, level, area, logMessage);
-    }
+    Logging.LogEntry(logFileName, name, level, location, logText);  
+       }
 
     /**
      * @return
      */
     public String getLogFilename() {
-       return logFileName;
+        if(logUrl.startsWith("http"))
+            return "<a href=\"" +logUrl+logFileName +".log\" target=\"_blank\">" + logFileName + "</a>";
+        else
+            return logUrl+logFileName + ".log";
     }
 
     /**
@@ -415,7 +424,7 @@ public class Mapping {
         this.refreshProfileResult =result;
     }
     
-    public String refreshProfilesInList(String onError) {
+    public String refreshProfilesInList(String onError) throws MappingStopTest {
         String myName="refreshProfilesInList";
         String myArea="init";
         String rc = Constants.OK;
@@ -493,13 +502,14 @@ public class Mapping {
         return this.applicationName;
     }
 
-    public String runMapping() {
+    public String runMapping() throws MappingStopTest {
         return runMapping(getObjectWithPath(), getMappingName());
     }
     
-    private String runMapping(String objectPath, String mappingName) {
+    private String runMapping(String objectPath, String mappingName) throws MappingStopTest {
         String myName="runMapping";
         String myArea ="init";
+        readParameterFile();
                                  
         String logMessage="Run mapping >" + mappingName +"< with path >" + objectPath +"<.";
             log(myName, Constants.DEBUG,myArea,logMessage);
@@ -512,8 +522,15 @@ public class Mapping {
         
         rs.addParameter(getApplicationName());
         rs.addParameter(getMappingName());
-        rs.runScriptReturnCode();
-        
+        try {
+            rs.runScriptReturnCode();
+        } catch (RunScriptStopTest e) {
+            if (Constants.YES.equals(getAbortOnError())) {
+                throw new MappingStopTest(getErrorMessage());
+            }
+
+        }
+
         String outCode =parseScriptOutput(rs.getCapturedOutput());
         String errCode =parseScriptOutput(rs.getCapturedErrors());
         String rsCode=rs.getErrorCode();
@@ -528,6 +545,34 @@ public class Mapping {
         }
         return outCode;
         
+    }
+
+    /**
+     * @param abortYesNo
+     * @throws RunScriptStopTest
+     */
+    public void setAbortOnError(String abortYesNo) throws RunScriptStopTest {
+        //Function to set abort on error, i.e. if RunScriptStopTest should be thrown in case of exceptions
+        userSetAbortOnError = true;
+        if (abortYesNo == null || abortYesNo.isEmpty()) {
+            this.abortYesNo = Constants.DEFAULT_ABORTONERROR;
+        } else {
+            if (Constants.YES.equals(abortYesNo) || Constants.NO.equals(abortYesNo)) {
+                this.abortYesNo = abortYesNo;
+            } else {
+                String myName = "setAbortOnError";
+                String myArea = "Error";
+                String logMessage =
+                    "Invalid value =>" + abortYesNo + "< specified for abort on error. Must be =>" + Constants.YES +
+                    "< or =>" + Constants.NO + "<.";
+                log(myName, Constants.FATAL, myArea, logMessage);
+                throw new RunScriptStopTest(logMessage);
+            }
+        }
+    }
+
+    public String getAbortOnError() {
+        return this.abortYesNo;
     }
 
     private String getObjectWithPath() {
@@ -552,17 +597,41 @@ public class Mapping {
         return getErrorCode();
         
     }
+    
+    private void readParameterFile() {
+      String logMessage = Constants.NOT_INITIALIZED;
+      String myName="readParamterFile";
+      String myArea="param search result";
+        
+        logUrl = GetParameters.GetLogUrl();
+        logMessage = "logURL >" + logUrl +"<.";
+        log(myName, Constants.DEBUG, myArea, logMessage);
 
-    static class ProfileStopTest extends Exception {
+        resultFormat =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RESULT_FORMAT);
+        if(Constants.NOT_FOUND.equals(resultFormat))
+            resultFormat =Constants.DEFAULT_RESULT_FORMAT;
+        logMessage = "resultFormat >" + resultFormat +"<.";
+        log(myName, Constants.DEBUG, myArea, logMessage);
+
+    }
+
+    /**
+     * @return fixture version info
+     */
+    public static String getVersion() {
+        return version;
+    }
+
+    static class MappingStopTest extends Exception {
          @SuppressWarnings("compatibility:-5661641983890468252")
          static final long serialVersionUID = 34985952947L;
-            public ProfileStopTest(){
+            public MappingStopTest(){
             }
 
          /**
           * @param msg
           */
-         public ProfileStopTest(String msg){
+         public MappingStopTest(String msg){
            super(msg);
        }
 
