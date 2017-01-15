@@ -60,8 +60,11 @@ public class Constants {
     public static final String LOG_DIR = "log/";
     // The log url points to a web server (e.g. Jetty) that is configured to list FitNesse log files from <installdir>/log
     public static final String LOG_URL = "http://localhost:8080/fitnesselogs/";
+
+    //must exist in directory.properties
     public static final String LOGICAL_BASE_DIR = "base";
     public static final String LOGICAL_SCRIPT_DIR ="scripts";
+    public static final String SCRIPTDIR_IDQSUBDIR ="idq";
     
     public static final String TABLE_PREFIX = "CNSG_";
     public static final String DEFAULT_CHECK_TABLE="CHCK";
@@ -87,6 +90,7 @@ public class Constants {
     public static final String APPPROP_DELIMITER =".";
     public static final String IDQ_PATH_SEPARATOR ="/";
     public static final String FITNESSE_DELIMITER ="|";
+    public static final String PROPERTY_DELIMITER ="=";
     
     // Location of config files
     public static final String CONFIGDIRECTORY="config/";
@@ -234,6 +238,7 @@ public class Constants {
     //Scripts
     public static final String RUNIDQPROFILE_SCRIPT="runidqprofile.sh";
     public static final String RUNIDQMAPPING_SCRIPT="runidqmapping.sh";
+    public static final String RUNIDQDISOBJECT_SCRIPT="runidqdisobject.sh";
     
     //Database type
     public static final String DATABASETYPE_DB2 ="DB2";
@@ -257,10 +262,113 @@ public class Constants {
     public static final List<String> resultFormats = Collections.unmodifiableList(Arrays.asList(RESULT_AS_HTML
                                                                                                  ,RESULT_AS_JSON));
     
-    public static final String JOB_DIR="jobs/";
-    public static final String JOB_COLUMN_SEPARATOR="|";
-    
     public static final String ERRCODE_INVALID_LOCATION="InvalidLogicalLocation";
     public static final String ERROR_INVALID_LOCATION="An invalid logical location was specified.";
-                                                  
+    
+    public static final String JOB_DIR="jobs/";
+    public static final String JOB_COLUMN_SEPARATOR="|";
+    public static final String JOB_DEFINITION = "Table:JobDefinition";
+    
+    public static final int JOB_STEP_COLNR=0;   // zero-based!   Note: Once the result has been added, StepColNr will be the 2nd column!
+    public static final int JOB_STEPRESULT_COLNR=0;
+    public static final int JOB_STEPNAME_COLNR=1;   // zero-based!                 
+    public static final int JOB_STEPTYPE_COLNR=2;   // zero-based!
+    public static final int JOB_TASKTYPE_COLNR=3;
+
+    //Job step types. Keep these all lower case and without any spaces!
+    public static final String JOB_STEPTYPE_IDQ = "runidq";
+    public static final String JOB_STEPTYPE_PWC = "runpwc";
+    public static final String JOB_STEPTYPE_ORACLE = "runoracle";
+    public static final String JOB_STEPTYPE_DB2 = "rundb2";
+    public static final String JOB_STEPTYPE_DAC = "rundac";
+    public static final String JOB_STEPTYPE_SCRIPT = "runscript";
+
+    public static final List<String> JOB_STEPTYPES = Collections.unmodifiableList(Arrays.asList(
+         JOB_STEPTYPE_IDQ
+        ,JOB_STEPTYPE_PWC
+        ,JOB_STEPTYPE_ORACLE
+        ,JOB_STEPTYPE_DB2
+        ,JOB_STEPTYPE_DAC
+        ,JOB_STEPTYPE_SCRIPT
+        ));
+
+    public static final List<String> JOB_IMPLEMENTED_STEPTYPES = Collections.unmodifiableList(Arrays.asList(
+        JOB_STEPTYPE_IDQ
+        ));
+    public static final String JOB_STEPTYPE_NOT_IMPLEMENTED ="Job Step Type not in the list of implemented types.";
+    
+    //Job parameter names. Keep these all lower case and without any spaces!
+    public static final String JOB_PARAM_VERSION="version";
+    public static final String JOB_PARAM_PERSISTENCE="persistence";
+    public static final String JOB_PARAM_MAX_CONCURRENCY="maxconcurrency";
+    public static final String JOB_PARAM_MAX_CONCURRENT="maxconcurrent";  //alternative name for maxconcurrency
+    public static final String JOB_PARAM_IDQCONFIG="idqconfig";
+    public static final String JOB_PARAM_PWCCONFIG="pwcconfig";
+    public static final String JOB_PARAM_ORACLECONFIG="oracleconfig";
+    public static final String JOB_PARAM_DB2CONFIG="db2config";
+    public static final String JOB_PARAM_DACCONFIG="dacconfig";
+    public static final String JOB_PARAM_SCRIPTCONFIG="scriptconfig";
+
+    public static final String JOBSTEP_IDQ_MAPPING="mapping";
+    public static final String JOBSTEP_IDQ_SCORECARD="scorecard";
+    public static final String JOBSTEP_IDQ_PROFILE="profile";
+    public static final String JOBSTEP_IDQ_WORKFLOW="workflow";
+
+    public static final List<String> JOBSTEP_IDQ_TYPES = Collections.unmodifiableList(Arrays.asList(
+        JOBSTEP_IDQ_MAPPING
+        ,JOBSTEP_IDQ_SCORECARD
+        ,JOBSTEP_IDQ_PROFILE
+        ,JOBSTEP_IDQ_WORKFLOW
+        ));
+    
+    public static final String JOBSTEP_PARAM_IDQ_PROJECT="project";
+    public static final String JOBSTEP_PARAM_IDQ_APPLICATION="application";
+    public static final String JOBSTEP_PARAM_IDQ_OBJECT="object";
+    public static final String JOBSTEP_PARAM_IDQ_MAPPING="mapping";
+    public static final String JOBSTEP_PARAM_IDQ_EXPECTEDRESULT="result";
+    public static final String JOBSTEP_PARAM_IDQ_ONERROR="abortonerror";  // Yes or No (as with other fixtures)
+    public static final String JOBSTEP_PARAM_IDQ_ONERRORACTION="onerror"; // STOP, CONTINUE, ...
+    public static final String JOBSTEP_PARAM_IDQ_WAIT="wait";
+    public static final String JOBSTEP_PARAM_IDQ_JOBMUSTWAITONSTEPCOMPLETION="jobmustwaitontaskcompletion";
+
+    public static final List<String> JOBSTEP_IDQ_PARAMS_PROFILE = Collections.unmodifiableList(Arrays.asList(
+         JOBSTEP_PARAM_IDQ_PROJECT
+        ,JOBSTEP_PARAM_IDQ_OBJECT
+        ,JOBSTEP_PARAM_IDQ_EXPECTEDRESULT
+        ,JOBSTEP_PARAM_IDQ_ONERROR
+        ,JOBSTEP_PARAM_IDQ_WAIT
+        ,JOBSTEP_PARAM_IDQ_JOBMUSTWAITONSTEPCOMPLETION
+        ));
+    
+    public static final List<String> JOBSTEP_IDQ_PARAMS_MAPPING = Collections.unmodifiableList(Arrays.asList(
+         JOBSTEP_PARAM_IDQ_PROJECT
+        ,JOBSTEP_PARAM_IDQ_APPLICATION
+        ,JOBSTEP_PARAM_IDQ_MAPPING
+        ,JOBSTEP_PARAM_IDQ_EXPECTEDRESULT
+        ,JOBSTEP_PARAM_IDQ_ONERROR
+        ,JOBSTEP_PARAM_IDQ_WAIT
+        ,JOBSTEP_PARAM_IDQ_JOBMUSTWAITONSTEPCOMPLETION
+        ));
+    
+    public static final List<String> JOBSTEP_IDQ_PARAMS_WORKFLOW = Collections.unmodifiableList(Arrays.asList(
+         JOBSTEP_PARAM_IDQ_PROJECT
+        ,JOBSTEP_PARAM_IDQ_APPLICATION
+        ,JOBSTEP_PARAM_IDQ_OBJECT
+        ,JOBSTEP_PARAM_IDQ_EXPECTEDRESULT
+        ,JOBSTEP_PARAM_IDQ_ONERROR
+        ,JOBSTEP_PARAM_IDQ_WAIT
+        ,JOBSTEP_PARAM_IDQ_JOBMUSTWAITONSTEPCOMPLETION
+        ));
+
+    public static final String JOBSTEP_PARAM_STOPACTION_STOP="stop";
+    public static final String JOBSTEP_PARAM_STOPACTION_CONTINUE="continue";
+    
+    public static final List<String> JOBSTEP_PARAMS_ONERRORACTION = Collections.unmodifiableList(Arrays.asList(
+         JOBSTEP_PARAM_STOPACTION_STOP
+        ,JOBSTEP_PARAM_STOPACTION_CONTINUE
+        ));
+
+    public static final int JOB_STEP_IDQ_OBJECTTYPE_COLNR=3;
+    
+    
 }

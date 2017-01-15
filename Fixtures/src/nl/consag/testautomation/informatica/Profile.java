@@ -21,6 +21,8 @@ import nl.consag.supporting.Logging;
 
 import nl.consag.testautomation.scripts.RunScript;
 
+import nl.consag.testautomation.scripts.RunScript.RunScriptStopTest;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class Profile {
@@ -239,7 +241,7 @@ public class Profile {
     /**
      * @return
      */
-    public List<List<List<String>>> query() {
+    public List<List<List<String>>> query() throws nl.consag.testautomation.scripts.RunScript.RunScriptStopTest {
     String myName="query";
     String myArea="init";
     String logMessage = Constants.NOT_INITIALIZED;
@@ -291,7 +293,7 @@ public class Profile {
      * Need to match query result (rows with column values) to columns as expected in FitNesse test page
      * Each column value must be preceded with the column name. For each record.
      */
-    private List<List<List<String>>> createResultSet(List<List<String>> queryResult, List<String> colNames) {
+    private List<List<List<String>>> createResultSet(List<List<String>> queryResult, List<String> colNames) throws RunScriptStopTest {
         String myName="createResultSet";
         List<List<List<String>>> out = new ArrayList<List<List<String>>>();
         
@@ -431,7 +433,7 @@ public class Profile {
         this.refreshProfileResult =result;
     }
     
-    public String refreshProfilesInList(String onError) {
+    public String refreshProfilesInList(String onError) throws nl.consag.testautomation.scripts.RunScript.RunScriptStopTest {
         String myName="refreshProfilesInList";
         String myArea="init";
         String rc = Constants.OK;
@@ -518,11 +520,11 @@ public class Profile {
     public String getObjectName() {
         return this.objectName;
     }
-    public String refreshProfile() {
+    public String refreshProfile() throws nl.consag.testautomation.scripts.RunScript.RunScriptStopTest {
         return refreshProfile(getObjectWithPath(), getProfileName());
     }
     
-    private String refreshProfile(String objectPath, String profileName) {
+    private String refreshProfile(String objectPath, String profileName) throws nl.consag.testautomation.scripts.RunScript.RunScriptStopTest {
         String myName="refreshProfile";
 
         RunScript rs = new RunScript(Constants.RUNIDQPROFILE_SCRIPT,className + "-" + myName + "-" + profileName);

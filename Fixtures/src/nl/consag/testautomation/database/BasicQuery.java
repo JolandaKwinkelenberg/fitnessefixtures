@@ -2,7 +2,7 @@
  * The purpose of this fixture is to compare the expected outcome of a database query with the actual outcome using the FitNesse slim 'table' table.
  * The input parameters are provided by a table in the FitNesse wiki. 
  * @author Jac. Beekers
- * @version 21 November 2015
+ * @version 20161111.0 #- Added some comments for java docs
  * @since   10 May 2015
  */ 
 package nl.consag.testautomation.database;
@@ -24,7 +24,7 @@ import nl.consag.supporting.Logging;
 import nl.consag.supporting.GetParameters;
 
 public class BasicQuery {
-    private static String version ="20151121.0";
+    private static String version ="20161111.0";
 
 	private String className = "BasicQuery";
 	private String logFileName = Constants.NOT_INITIALIZED;
@@ -98,7 +98,7 @@ public class BasicQuery {
 
     /**
      * @param inputTable
-     * @return
+     * @return FitNesse table with results
      */
     public List doTable(List<List<String>> inputTable) { 
 		//Main function; checks input table and populates output table		  											 
@@ -127,7 +127,7 @@ public class BasicQuery {
 		  }
 
     /**
-     * @return
+     * @return How many column values in row are correct
      */
     public String columnsOk() {
 	    // returns rowEqualValues
@@ -136,7 +136,7 @@ public class BasicQuery {
 	    }
 
     /**
-     * @return
+     * @return How many column values are incorrect
      */
     public String columnsNotOk() {
 	    // returns rowUnequalValues
@@ -310,9 +310,6 @@ public class BasicQuery {
 	       addRowToReturnTable (return_row); //return row with outcomes; pass/fail  
     }
 
-    /**
-     * @return
-     */
     private List<List<String>> getDatabaseTable (boolean collectResultRows){
 	       String myName="getDatabaseTable";
 	       String myArea="Initialization";
@@ -417,7 +414,7 @@ public class BasicQuery {
 	   }
 
     /**
-     * @return
+     * @return log file name, including .log extension
      */
     public String getLogFilename() {
 		return logFileName + ".log";
@@ -440,14 +437,14 @@ public class BasicQuery {
     }
 
     /**
-     * @return
+     * @return Log level as String: FATAL,ERROR,WARNING,INFO,DEBUG,VERBOSE
      */
     public String getLogLevel() {
        return Constants.logLevel.get(getIntLogLevel());
     }
 
     /**
-     * @return
+     * @return Log level as integer
      */
     public Integer getIntLogLevel() {
         return logLevel;
