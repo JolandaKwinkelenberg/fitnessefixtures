@@ -9,6 +9,7 @@ import java.io.*;
 
 import java.text.SimpleDateFormat;
 
+import nl.consag.supporting.Constants;
 import nl.consag.supporting.Logging;
 
 public class CheckFixtureProperties {
@@ -16,61 +17,25 @@ public class CheckFixtureProperties {
 
   //27-07-2013 Change to new log mechanism, preventing java heap space error with fitnesse stdout
     private String m_className="CheckFixtureProperties";
-    private String sNotInit ="Not initialized";
-    private String sDefault="default";  // Also used in Logging. Keep value in-sync!
 
-    private String m_context=sDefault;
-    private String m_startDate=sNotInit;
+    private String m_context=Constants.DEFAULT;
+    private String m_startDate=Constants.NOT_INITIALIZED;
     private boolean m_firstTime=true;
   //27-07-2013
 
-    private static String sNotFound ="NOTFOUND";
-  private static String sNotImplemented="Not yet implemented";
+    private String errorCode=Constants.NOT_INITIALIZED;
+    private String errorMessage=Constants.NOT_INITIALIZED;
+    private String delimiter=Constants.DATABASE_PROPERTIES_DELIMITER;
+    
   private static String curFields[];
-  private static String delimiter = ":";
-  private static String paramFileOperation ="fileoperation.properties";
-  private static String paramApplication ="application.properties";
-  private static String paramDatabase ="database.properties";
-  private static String paramJDBC ="jdbc.properties";
-  private static String paramPowerCenter ="powercenter.properties";
-  private static String paramPowerCenterAppWSH ="appwsh.properties";
-  private static String paramPowerCenterWSH ="wsh.properties";
-  private static String paramDAC ="dac.properties";
-  private static String paramEnvironment ="environment.properties";
-  private static String sIncoming ="incoming";
-  private static String sOutgoing ="outgoing";
-  private static String sTestdata ="testdata";
-  private static String sTemp ="temp";
-  private static String sEnvironment ="Environment";
-  private static String sLogDir ="logdir";
-  private static String cNotInit ="Not initialized";
-  private static String sOk ="OK";
-  /**
-   * Static values for indexes in Database parameter files
-   */
-  private static int iDatabaseType=1;
-  private static int iDatabaseConn=2;
-  private static int iDatabaseUserName=3;
-  private static int iDatabaseUserPWD=4;
-  private static int iDatabaseTableOwnerName=5;
-  private static int iDatabaseTableOwnerPWD=6;
-  //
-  /**
-   * Static values for indexes in PowerCenter parameter files
-   */
-  private static int iDomainName=1;
-  private static int iRepoService=2;
-  private static int iIntService=3;
-  private static int iUserName=4;
-  private static int iPassWord=5;
-  
-  private static int iWshUrl=1;
 
-//
-  private static int iRootDirIndex=1;
+    private static final String version = "20170123.0";
+
+  
+
   
 // holding values for this instance
-    private static String m_database =cNotInit;
+    private static String m_database =Constants.NOT_INITIALIZED;
 //
   
     public CheckFixtureProperties() {
@@ -89,8 +54,9 @@ public class CheckFixtureProperties {
 
     public static String forDatabaseName(String dbName) {
         m_database =dbName;
-        return sOk;
+        return Constants.OK;
     }
+    
   // Check login user
   public  boolean loginUser (String userId) {
       if(GetDatabaseUserName(m_database).equals(userId)) 
@@ -101,6 +67,17 @@ public class CheckFixtureProperties {
   public   String loginUser () {
       return GetDatabaseUserName(m_database);
   }
+
+    // Check table owner
+    public  boolean loginTableOwner (String userId) {
+        if(GetDatabaseTableOwnerName(m_database).equals(userId)) 
+            return true;          
+        else 
+            return false;          
+    }
+    public   String loginTableOwner () {
+        return GetDatabaseTableOwnerName(m_database);
+    }
 
     // Check login user
     public  boolean dbConnection (String dbConnection) {
@@ -113,6 +90,40 @@ public class CheckFixtureProperties {
     public  String dbConnection() {
         return GetDatabaseConnectionDefinition(m_database);
     }
+
+
+    public boolean connectionToDatabaseIsSuccessful(String userid) {
+        setError(Constants.ERROR, Constants.NOT_IMPLEMENTED);
+        return false;
+    }
+
+      public String connectionToDatabaseIsSuccessful() {
+          return getErrorMessage();
+      }
+
+      private void setError(String errCode, String errMsg) {
+          setErrorCode(errCode);
+          setErrorMessage(errMsg);
+      }
+
+      private void setErrorCode(String errCode) {
+          this.errorCode = errCode;
+      }
+      
+      private void setErrorMessage(String errMsg) {
+          this.errorMessage = errMsg;
+      }
+      
+      //in FitNesse show error message sounds better than show get error message
+    public String errorMessage() {
+        return getErrorMessage();
+    }
+      public String getErrorMessage() {
+          return this.errorMessage;
+      }
+      public String getErrorCode() {
+          return this.errorCode;
+      }
   // application name is provided
   // appwsh contains applications and which wsh object to use
   // wsh contains the definition of the wsh object to use
@@ -122,13 +133,13 @@ public class CheckFixtureProperties {
       
       // first find the app in appwsh
       
-      logicalWSH =FindParameter(paramPowerCenterAppWSH, searchFor, iWshUrl);
-      if (sNotFound.equals(logicalWSH)) {
-        return "application >" + searchFor + "< not found in >" + paramPowerCenterAppWSH +"<."; 
+      logicalWSH =FindParameter(Constants.APPWSH_PROPERTIES, searchFor, Constants.INDEX_APPWSH_WSHNAME);
+      if (Constants.NOT_FOUND.equals(logicalWSH)) {
+        return "application >" + searchFor + "< not found in >" + Constants.APPWSH_PROPERTIES +"<."; 
       }
       
       // now go look for the wsh
-      return FindParameter(paramPowerCenterWSH, logicalWSH);
+      return FindParameter(Constants.WSH_PROPERTIES, logicalWSH);
   }
         
   /**
@@ -136,7 +147,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String GetEnvironment() {
-    return FindParameter(paramEnvironment, sEnvironment);
+    return FindParameter(Constants.ENVIRONMENT_PROPERTIES, Constants.ENVIRONMENT);
   }
 
   /**
@@ -144,7 +155,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String GetLogDir() {
-    return FindParameter(paramFileOperation, sLogDir);
+    return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.LOG_DIR);
   }
 
 /*
@@ -152,7 +163,7 @@ public class CheckFixtureProperties {
  */
   public  String GetRootDir(String area){
     
-    return FindParameter(paramFileOperation, area, iRootDirIndex);
+    return FindParameter(Constants.FILEOPERATION_PROPERTIES, area, Constants.INDEX_FILEOPERATIONS_DIRECTORY);
   }
   
     /**
@@ -161,7 +172,7 @@ public class CheckFixtureProperties {
      * @return
      */
     public  String GetIncoming() {
-      return FindParameter(paramFileOperation, sIncoming);
+      return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.INCOMING);
     }
   /**
    * Get info for File Operations
@@ -169,7 +180,7 @@ public class CheckFixtureProperties {
    * @return
    */
     public   String GetOutgoing() {
-      return FindParameter(paramFileOperation, sOutgoing);
+      return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.OUTGOING);
     }
   /**
    * Get info for File Operations
@@ -177,7 +188,7 @@ public class CheckFixtureProperties {
    * @return
    */
     public  String GetTemp() {
-    return FindParameter(paramFileOperation, sTemp);
+    return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.TEMP);
   }
 
     /**
@@ -186,7 +197,7 @@ public class CheckFixtureProperties {
      * @return
      */
     public  String GetTestdata() {
-    return FindParameter(paramFileOperation, sTestdata);
+    return FindParameter(Constants.FILEOPERATION_PROPERTIES, Constants.TESTDATA);
   }
 
   /**
@@ -200,7 +211,7 @@ public class CheckFixtureProperties {
    * @return
    */
    public  String getDomainName(String pConnectionName) {
-   return FindParameter(paramPowerCenter, pConnectionName, iDomainName);
+   return FindParameter(Constants.POWERCENTER_PROPERTIES, pConnectionName, Constants.INDEX_INFA_DOMAINNAME);
    }
   /**
    * Get PowerCenter info
@@ -208,7 +219,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String getRepoService(String pConnectionName) {
-  return FindParameter(paramPowerCenter, pConnectionName, iRepoService);
+  return FindParameter(Constants.POWERCENTER_PROPERTIES, pConnectionName, Constants.INDEX_INFA_REPOSITORYSERVICE);
   }
 
   /**
@@ -217,7 +228,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String getIntService(String pConnectionName) {
-  return FindParameter(paramPowerCenter, pConnectionName, iIntService);
+  return FindParameter(Constants.POWERCENTER_PROPERTIES, pConnectionName, Constants.INDEX_INFA_INTEGRATIONSERVICE);
   }
 
   /**
@@ -226,7 +237,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String getUsername(String pConnectionName) {
-  return FindParameter(paramPowerCenter, pConnectionName, iUserName);
+  return FindParameter(Constants.POWERCENTER_PROPERTIES, pConnectionName, Constants.INDEX_INFA_USERNAME);
   }
 
   /**
@@ -235,7 +246,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String getPassword(String pConnectionName) {
-  return FindParameter(paramPowerCenter, pConnectionName, iPassWord);
+  return FindParameter(Constants.POWERCENTER_PROPERTIES, pConnectionName, Constants.INDEX_INFA_USER_PASSWORD);
   }
 
   /**
@@ -250,7 +261,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String GetDatabaseType(String pConnectionName) {
-  return FindParameter(paramDatabase, pConnectionName, iDatabaseType);
+  return FindParameter(Constants.DATABASE_PROPERTIES, pConnectionName, Constants.INDEX_DATABASE_TYPE);
   }
 
   /**
@@ -260,7 +271,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String GetDatabaseConnectionDefinition(String pConnectionName) {
-  return FindParameter(paramDatabase, pConnectionName, iDatabaseConn);
+  return FindParameter(Constants.DATABASE_PROPERTIES, pConnectionName, Constants.INDEX_DATABASE_CONNECTION);
   }
 
   /**
@@ -269,10 +280,10 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String GetDatabaseUserName(String pConnectionName) {
-  return FindParameter(paramDatabase, pConnectionName, iDatabaseUserName);
+  return FindParameter(Constants.DATABASE_PROPERTIES, pConnectionName, Constants.INDEX_DATABASE_USERNAME);
   }
   public  String GetDatabaseTableOwnerName(String pConnectionName) {
-  return FindParameter(paramDatabase, pConnectionName, iDatabaseTableOwnerName);
+  return FindParameter(Constants.DATABASE_PROPERTIES, pConnectionName, Constants.INDEX_DATABASE_TABLE_OWNER);
   }
 
   /**
@@ -281,10 +292,10 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String GetDatabaseUserPWD(String pConnectionName) {
-  return FindParameter(paramDatabase, pConnectionName, iDatabaseUserPWD);
+  return FindParameter(Constants.DATABASE_PROPERTIES, pConnectionName, Constants.INDEX_DATABASE_USER_PASSWORD);
   }
   public  String GetDatabaseTableOwnerPWD(String pConnectionName) {
-  return FindParameter(paramDatabase, pConnectionName, iDatabaseTableOwnerPWD);
+  return FindParameter(Constants.DATABASE_PROPERTIES, pConnectionName, Constants.INDEX_DATABASE_TABLE_OWNER_PASSWORD);
   }
 
   /**
@@ -294,7 +305,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String GetDatabaseDriver(String pDatabaseType) {
-  return FindParameter(paramJDBC, pDatabaseType);
+  return FindParameter(Constants.JDBC_PROPERTIES, pDatabaseType);
   }
 
   /**
@@ -304,7 +315,7 @@ public class CheckFixtureProperties {
    * @return
    */
   public  String GetDatabaseURL(String pDatabaseConn) {
-  return FindParameter(paramJDBC, pDatabaseConn);
+  return FindParameter(Constants.JDBC_PROPERTIES, pDatabaseConn);
   }
 
 
@@ -328,9 +339,9 @@ public class CheckFixtureProperties {
 */
    private  String FindParameter(String pFileName, String pSearchFor) {
     String sResult;
-    delimiter =": ";
+    setDelimiter(": ");
     sResult= FindParameter(pFileName, pSearchFor, 1);
-    delimiter =":";
+    setDelimiter(Constants.DATABASE_PROPERTIES_DELIMITER);
 return sResult;
    }
 
@@ -340,7 +351,7 @@ return sResult;
         String sSearchFor = pSearchFor;
         String sFileName = pFileName;
         boolean bFound;
-        String sResult =sNotFound;
+        String sResult =Constants.NOT_FOUND;
     //  log("FindParameter","debug","init","Searching in file =>" + pFileName + "< for >" + pSearchFor + "< Index =>" + pIndex +"<.");
               try {
             // Open fitnesse parameter file
@@ -354,7 +365,7 @@ return sResult;
             //Read File Line By Line
             bFound =false;
             while ( !bFound && ((strLine = br.readLine()) != null)) {
-                curFields = strLine.split(delimiter);
+                curFields = strLine.split(getDelimiter());
                 if (curFields[0].equals(sSearchFor)) {
                     sResult= curFields[pIndex];
                     bFound=true;
@@ -373,10 +384,10 @@ return sResult;
   //27-07-2013 New log mechanism 
   public void log(String name, String level, String area, String logMessage) {
      
-     String logFileName =sNotInit;
+     String logFileName =Constants.NOT_INITIALIZED;
      
   
-     if(m_context.equals(sDefault)) {
+     if(m_context.equals(Constants.DEFAULT)) {
      logFileName=m_startDate+"." + m_className;
    Logging.LogEntry(logFileName, name,level,area,logMessage);
      } else {
@@ -391,5 +402,16 @@ return sResult;
    
   }
 
+
+  private void setDelimiter(String delimiter) {
+      this.delimiter=delimiter;
+  }
+  private String getDelimiter() {
+      return this.delimiter;
+  }
+  
+    public static String getVersion() {
+        return version;
+    }
 
 }

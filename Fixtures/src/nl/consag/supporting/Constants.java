@@ -64,7 +64,12 @@ public class Constants {
     //must exist in directory.properties
     public static final String LOGICAL_BASE_DIR = "base";
     public static final String LOGICAL_SCRIPT_DIR ="scripts";
-    public static final String SCRIPTDIR_IDQSUBDIR ="idq";
+    
+    public static final String LOGICAL_LOCATION_IDQSUBDIR ="idq";
+    public static final String PARAM_LOGICAL_LOCATION_IDQSUBDIR ="logicalLocationIdqSubDir";
+        
+    public static final String LOGICAL_SCRIPTDIR_IDQ ="idqscripts";
+    public static final String PARAM_LOGICAL_SCRIPTDIR_IDQ="logicalLocationIdqScripts";
     
     public static final String TABLE_PREFIX = "CNSG_";
     public static final String DEFAULT_CHECK_TABLE="CHCK";
@@ -91,6 +96,7 @@ public class Constants {
     public static final String IDQ_PATH_SEPARATOR ="/";
     public static final String FITNESSE_DELIMITER ="|";
     public static final String PROPERTY_DELIMITER ="=";
+    public static final String DATABASE_PROPERTIES_DELIMITER =":";
     
     // Location of config files
     public static final String CONFIGDIRECTORY="config/";
@@ -110,6 +116,36 @@ public class Constants {
     public static final String ENVIRONMENT_PROPERTIES =CONFIGDIRECTORY + "environment.properties";
     public static final String INFA_PROCESS_PROPERTIES =CONFIGDIRECTORY + "infaprocess.properties";
     public static final String FIXTURE_PROPERTIES =CONFIGDIRECTORY + "fixture.properties";
+
+    /**
+     * Static values for indexes in Database parameter files
+     */
+    public static final int INDEX_DATABASE_TYPE=1;
+    public static final int INDEX_DATABASE_CONNECTION=2;
+    public static final int INDEX_DATABASE_USERNAME=3;
+    public static final int INDEX_DATABASE_USER_PASSWORD=4;
+    public static final int INDEX_DATABASE_TABLE_OWNER=5;
+    public static final int INDEX_DATABASE_TABLE_OWNER_PASSWORD=6;
+
+    /**
+     * Static values for indexes in PowerCenter parameter files
+     */
+    public static final int INDEX_INFA_DOMAINNAME=1;
+    public static final int INDEX_INFA_REPOSITORYSERVICE=2;
+    public static final int INDEX_INFA_INTEGRATIONSERVICE=3;
+    public static final int INDEX_INFA_USERNAME=4;
+    public static final int INDEX_INFA_USER_PASSWORD=5;
+
+    /**
+     * Static values for indexes in Application WebServiceHub parameter files
+     */
+    public static final int INDEX_APPWSH_WSHNAME=1;
+    
+    /**
+     * Static values for indexes in file operations parameter files
+     */
+    public static final int INDEX_FILEOPERATIONS_DIRECTORY=1;
+
 
     public static final String SIEBEL_USER ="Usr";
     public static final String SIEBEL_PWD ="Pwd";
@@ -141,6 +177,29 @@ public class Constants {
     public static final String ERROR = "ERROR";
     public static final String FATAL ="FATAL";
     public static final List<String> logLevel = Collections.unmodifiableList(Arrays.asList(FATAL,ERROR,WARNING,INFO,DEBUG,VERBOSE));
+    
+    public static final int LOGLEVEL_FATAL=0; 
+    public static final int LOGLEVEL_ERROR=1; 
+    public static final int LOGLEVEL_WARNING=2; 
+    public static final int LOGLEVEL_INFO=3; 
+    public static final int LOGLEVEL_DEBUG=4; 
+    public static final int LOGLEVEL_VERBOSE=5; 
+    
+    // Properties file management
+    public static final String PROPMGMT_ACTION_ADD="add";
+    public static final String PROPMGMT_ACTION_REMOVE="remove";
+    public static final List<String> PROPMGMT_ACTIONS = Collections.unmodifiableList(Arrays.asList(
+        PROPMGMT_ACTION_ADD
+        ,PROPMGMT_ACTION_REMOVE
+        ));
+
+    public static final String PROPMGMT_ACTIONERROR_IGNORE="ignore it";
+    public static final String PROPMGMT_ACTIONERROR_CREATE="create it";
+    public static final String PROPMGMT_ACTIONERROR_REPORT="report error";
+    public static final List<String> PROPMGMT_ACTIONERRORS = Collections.unmodifiableList(Arrays.asList(
+        PROPMGMT_ACTIONERROR_IGNORE
+        ,PROPMGMT_ACTIONERROR_CREATE
+        ,PROPMGMT_ACTIONERROR_REPORT));
     
     // default timestamp format used by Excel and Siebel
     public static final String DEFAULT_TIMESTAMP_FORMAT ="yyyy-MM-dd HH:mm:ss";
@@ -235,10 +294,18 @@ public class Constants {
     
     public static final String REFRESH_PROFILE="Refresh Profile?";
     
+    public static final String DEFAULT_VALUE_FOR_NULL="[NULL]";
+    public static final String PARAM_DEFAULT_VALUE_FOR_NULL="DefaultValueForNull";
+    
     //Scripts
-    public static final String RUNIDQPROFILE_SCRIPT="runidqprofile.sh";
-    public static final String RUNIDQMAPPING_SCRIPT="runidqmapping.sh";
-    public static final String RUNIDQDISOBJECT_SCRIPT="runidqdisobject.sh";
+    public static final String RUNIDQPROFILE_DEFAULT_SCRIPT="runidqprofile.sh";
+    public static final String PARAM_RUNIDQPROFILE_SCRIPT="RunIdqProfileScript";
+    public static final String RUNIDQMAPPING_DEFAULT_SCRIPT="runidqmapping.sh";
+    public static final String PARAM_RUNIDQMAPPING_SCRIPT="RunIdqMappingScript";
+    public static final String RUNIDQDISOBJECT_DEFAULT_SCRIPT="runidqdisobject.sh";
+    public static final String PARAM_RUNIDQDISOBJECT_SCRIPT="RunIdqDisObjectScript";
+    public static final String RUNIDQJOB_DEFAULT_SCRIPT="runidqjob.sh";
+    public static final String PARAM_RUNIDQJOB_SCRIPT="RunIdqJobScript";
     
     //Database type
     public static final String DATABASETYPE_DB2 ="DB2";
@@ -265,7 +332,9 @@ public class Constants {
     public static final String ERRCODE_INVALID_LOCATION="InvalidLogicalLocation";
     public static final String ERROR_INVALID_LOCATION="An invalid logical location was specified.";
     
-    public static final String JOB_DIR="jobs/";
+    public static final String IDQ_JOBDIR="jobs/";
+    public static final String PARAM_IDQ_JOBDIR ="IdqJobDir";
+    
     public static final String JOB_COLUMN_SEPARATOR="|";
     public static final String JOB_DEFINITION = "Table:JobDefinition";
     
@@ -294,6 +363,11 @@ public class Constants {
 
     public static final List<String> JOB_IMPLEMENTED_STEPTYPES = Collections.unmodifiableList(Arrays.asList(
         JOB_STEPTYPE_IDQ
+    ,JOB_STEPTYPE_PWC
+    ,JOB_STEPTYPE_ORACLE
+    ,JOB_STEPTYPE_DB2
+    ,JOB_STEPTYPE_DAC
+    ,JOB_STEPTYPE_SCRIPT
         ));
     public static final String JOB_STEPTYPE_NOT_IMPLEMENTED ="Job Step Type not in the list of implemented types.";
     

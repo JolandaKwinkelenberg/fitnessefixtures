@@ -3,7 +3,7 @@
  * @author Jac Beekers
  * @since January 2017
  * @version 20170107.0 - Initial version, based on Mapping
- * 
+ * @version 20170225.0 - scripts can be configured in fixture.properties
  */
 
 package nl.consag.testautomation.informatica;
@@ -22,14 +22,14 @@ import nl.consag.testautomation.supporting.GetDatabaseTable;
 //import static supporting.ListUtility.list;
 import nl.consag.supporting.Logging;
 
-import nl.consag.testautomation.scripts.RunScript;
+import nl.consag.testautomation.scripts.ExecuteScript;
 
-import nl.consag.testautomation.scripts.RunScript.RunScriptStopTest;
+import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 import org.apache.commons.lang3.StringUtils;
 
 public class DISObject {
-    private static final String version = "20170108.0";
+    private static final String version = "20170225.0";
 
     private String className = "DISObject";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -50,6 +50,9 @@ public class DISObject {
 
     private String logUrl=Constants.LOG_DIR;
     private String resultFormat =Constants.DEFAULT_RESULT_FORMAT;
+
+    // script names
+    private String disObjectScript =Constants.RUNIDQDISOBJECT_DEFAULT_SCRIPT;
 
     private boolean userSetAbortOnError = false;
 
@@ -234,9 +237,9 @@ public class DISObject {
         String logMessage="Running DIS Object >" + objectName +"< with path >" + objectPath +"<.";
             log(myName, Constants.DEBUG,myArea,logMessage);
 
-        RunScript rs = new RunScript(Constants.RUNIDQDISOBJECT_SCRIPT,className + "-" + myName + "-" + objectName);
+        ExecuteScript rs = new ExecuteScript(getDisObjectScript(),className + "-" + myName + "-" + objectName);
         rs.setLogLevel(getLogLevel());
-        rs.setScriptLocation(Constants.LOGICAL_SCRIPT_DIR + " " + Constants.SCRIPTDIR_IDQSUBDIR);
+        rs.setScriptLocation(Constants.LOGICAL_SCRIPT_DIR + " " + Constants.LOGICAL_LOCATION_IDQSUBDIR);
         rs.setCaptureOutput(Constants.YES);
         rs.setCaptureErrors(Constants.YES);
         
@@ -245,7 +248,7 @@ public class DISObject {
         rs.addParameter(getObjectName());
         try {
             rs.runScriptReturnCode();
-        } catch (RunScriptStopTest e) {
+        } catch (ExecuteScriptStopTest e) {
             if (Constants.YES.equals(getAbortOnError())) {
                 throw new DISObjectStopTest(getErrorMessage());
             }
@@ -327,6 +330,7 @@ public class DISObject {
       String logMessage = Constants.NOT_INITIALIZED;
       String myName="readParamterFile";
       String myArea="param search result";
+      String result=Constants.NOT_FOUND;
         
         logUrl = GetParameters.GetLogUrl();
         logMessage = "logURL >" + logUrl +"<.";
@@ -338,6 +342,19 @@ public class DISObject {
         logMessage = "resultFormat >" + resultFormat +"<.";
         log(myName, Constants.DEBUG, myArea, logMessage);
 
+        //Script to use for RunIdqDisObject
+        result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQDISOBJECT_SCRIPT);
+        if(Constants.NOT_FOUND.equals(result)) {
+            setDisObjectScript(Constants.RUNIDQDISOBJECT_DEFAULT_SCRIPT);
+        }
+        else {
+            setDisObjectScript(result);
+        }
+        log(myName, Constants.DEBUG, myArea, "DisObjectScript (if used) will be >" + getDisObjectScript() +"<.");
+
+
+        log(myName, Constants.DEBUG, "end", "End of readParameterFile");
+
     }
 
     /**
@@ -345,6 +362,14 @@ public class DISObject {
      */
     public static String getVersion() {
         return version;
+    }
+
+    public void setDisObjectScript(String disobjectScript) {
+        this.disObjectScript = disobjectScript;
+    }
+
+    public String getDisObjectScript() {
+        return disObjectScript;
     }
 
     public static class DISObjectStopTest extends Exception {
