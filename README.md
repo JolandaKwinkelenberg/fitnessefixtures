@@ -9,6 +9,7 @@ The readme for Linux can be found in the directory 'linuxscripts', here on githu
 
 ## Download
 You can download the jar with all compiled fixtures from the release tab.
+Release 2017.02: https://github.com/consag/fitnessefixtures/releases/download/2017.02/ConsagFitNesseFixtures.jar
 
 Fall 2016 release: https://github.com/consag/fitnessefixtures/releases/download/Fall2016/ConsagFitNesseFixtures.jar
 
