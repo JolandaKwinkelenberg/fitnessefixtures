@@ -4,6 +4,7 @@
  * @since 12 July 2016
  * @version 20160712.0 - initial version
  * @version 20170107.0 - RunScript introduced StopTest
+ * @version 20170225.0 - Scripts can be set in fixture.properties file
  */
 package nl.consag.testautomation.informatica;
 
@@ -21,14 +22,16 @@ import nl.consag.testautomation.supporting.GetDatabaseTable;
 //import static supporting.ListUtility.list;
 import nl.consag.supporting.Logging;
 
-import nl.consag.testautomation.scripts.RunScript;
+import nl.consag.testautomation.scripts.ExecuteScript;
 
-import nl.consag.testautomation.scripts.RunScript.RunScriptStopTest;
+import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 import org.apache.commons.lang3.StringUtils;
 
+import org.openqa.selenium.internal.seleniumemulation.RunScript;
+
 public class Mapping {
-    private static final String version = "20170108.0";
+    private static final String version = "20170225.0";
 
     private String className = "Mapping";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -45,6 +48,10 @@ public class Mapping {
     private String profileListResult = Constants.OK;
     private String numberOfProfilesResult = Constants.OK;
     private List<List<String>> profileList=new ArrayList<List<String>>();
+
+    // script names
+    private String profileScript =Constants.RUNIDQPROFILE_DEFAULT_SCRIPT;
+    private String mappingScript =Constants.RUNIDQMAPPING_DEFAULT_SCRIPT;
 
     //Queries taken from Informatica Support DocId 322200
     private String sqlMRProfiles ="SELECT /* FitNesse Fixture Profile (c) Consag Consultancy Services B.V. */ " +
@@ -285,7 +292,7 @@ public class Mapping {
                 List<String> colAndVal = new ArrayList<String>();
                 colAndVal.add(Constants.REFRESH_PROFILE);
                 
-                RunScript rs = new RunScript(Constants.RUNIDQPROFILE_SCRIPT,className + "-" + myName);
+                ExecuteScript rs = new ExecuteScript(getProfileScript(),className + "-" + myName);
                 rs.setLogLevel(getLogLevel());
                 rs.setScriptLocation("scripts idq");
                 rs.addParameter(currentProfilePathName);
@@ -293,7 +300,7 @@ public class Mapping {
                 try {
                     rc = rs.runScriptReturnCode();
                     colAndVal.add(rc);
-                } catch (RunScriptStopTest e) {
+                } catch (ExecuteScriptStopTest e) {
                     myArea="Processing script returncode";
                     logMessage="Result from RunScript =>" + e.toString() +"<.";
                     log(myName, Constants.VERBOSE, myArea, logMessage);
@@ -514,7 +521,7 @@ public class Mapping {
         String logMessage="Run mapping >" + mappingName +"< with path >" + objectPath +"<.";
             log(myName, Constants.DEBUG,myArea,logMessage);
 
-        RunScript rs = new RunScript(Constants.RUNIDQMAPPING_SCRIPT,className + "-" + myName + "-" + mappingName);
+        ExecuteScript rs = new ExecuteScript(getMappingScript(),className + "-" + myName + "-" + mappingName);
         rs.setLogLevel(getLogLevel());
         rs.setScriptLocation("scripts idq");
         rs.setCaptureOutput(Constants.YES);
@@ -524,7 +531,7 @@ public class Mapping {
         rs.addParameter(getMappingName());
         try {
             rs.runScriptReturnCode();
-        } catch (RunScriptStopTest e) {
+        } catch (ExecuteScriptStopTest e) {
             if (Constants.YES.equals(getAbortOnError())) {
                 throw new MappingStopTest(getErrorMessage());
             }
@@ -551,7 +558,7 @@ public class Mapping {
      * @param abortYesNo
      * @throws RunScriptStopTest
      */
-    public void setAbortOnError(String abortYesNo) throws RunScriptStopTest {
+    public void setAbortOnError(String abortYesNo) throws ExecuteScriptStopTest {
         //Function to set abort on error, i.e. if RunScriptStopTest should be thrown in case of exceptions
         userSetAbortOnError = true;
         if (abortYesNo == null || abortYesNo.isEmpty()) {
@@ -566,7 +573,7 @@ public class Mapping {
                     "Invalid value =>" + abortYesNo + "< specified for abort on error. Must be =>" + Constants.YES +
                     "< or =>" + Constants.NO + "<.";
                 log(myName, Constants.FATAL, myArea, logMessage);
-                throw new RunScriptStopTest(logMessage);
+                throw new ExecuteScriptStopTest(logMessage);
             }
         }
     }
@@ -602,6 +609,7 @@ public class Mapping {
       String logMessage = Constants.NOT_INITIALIZED;
       String myName="readParamterFile";
       String myArea="param search result";
+      String result=Constants.NOT_FOUND;
         
         logUrl = GetParameters.GetLogUrl();
         logMessage = "logURL >" + logUrl +"<.";
@@ -613,6 +621,26 @@ public class Mapping {
         logMessage = "resultFormat >" + resultFormat +"<.";
         log(myName, Constants.DEBUG, myArea, logMessage);
 
+        //Script to use for RunIdqProfile
+        result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQPROFILE_SCRIPT);
+        if(Constants.NOT_FOUND.equals(result)) {
+            setProfileScript(Constants.RUNIDQPROFILE_DEFAULT_SCRIPT);
+        }
+        else {
+            setProfileScript(result);
+        }
+        log(myName, Constants.DEBUG, myArea, "profileScript (if used) will be >" + getProfileScript() +"<.");
+
+        //Script to use for RunIdqMapping
+        result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQMAPPING_SCRIPT);
+        if(Constants.NOT_FOUND.equals(result)) {
+            setMappingScript(Constants.RUNIDQMAPPING_DEFAULT_SCRIPT);
+        }
+        else {
+            setMappingScript(result);
+        }
+        log(myName, Constants.DEBUG, myArea, "mappingScript (if used) will be >" + getMappingScript() +"<.");
+
     }
 
     /**
@@ -621,6 +649,23 @@ public class Mapping {
     public static String getVersion() {
         return version;
     }
+
+    public void setProfileScript(String profileScript) {
+        this.profileScript = profileScript;
+    }
+
+    public String getProfileScript() {
+        return profileScript;
+    }
+
+    public void setMappingScript(String mappingScript) {
+        this.mappingScript = mappingScript;
+    }
+
+    public String getMappingScript() {
+        return mappingScript;
+    }
+
 
     static class MappingStopTest extends Exception {
          @SuppressWarnings("compatibility:-5661641983890468252")

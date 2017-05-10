@@ -3,6 +3,7 @@
  * @since   November 2016
  * @version 20161225.0 - initial version - Skeleton
  * @version 20170113.0 - implemented IDQ Mapping
+ * @version 20170225.0 - scripts can be configured in fixture.properties
  */ 
 package nl.consag.testautomation.scripts;
 
@@ -29,10 +30,10 @@ import nl.consag.testautomation.informatica.DISObject;
 import nl.consag.testautomation.informatica.DISObject.DISObjectStopTest;
 import nl.consag.testautomation.informatica.Mapping;
 import nl.consag.testautomation.informatica.Profile;
-import nl.consag.testautomation.scripts.RunScript.RunScriptStopTest;
+import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 public class JobDefinition {
-    private static String version ="20170113.0";
+    private static String version ="20170225.0";
 
     private String className = "JobDefinition";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -59,8 +60,15 @@ public class JobDefinition {
 
     private String logUrl=Constants.LOG_DIR;
     private String resultFormat =Constants.DEFAULT_RESULT_FORMAT;
-
-    private boolean userSetAbortOnError = false;
+    // script names
+    private String jobScript =Constants.RUNIDQJOB_DEFAULT_SCRIPT;
+    private String profileScript =Constants.RUNIDQPROFILE_DEFAULT_SCRIPT;
+    private String mappingScript =Constants.RUNIDQMAPPING_DEFAULT_SCRIPT;
+    private String disObjectScript =Constants.RUNIDQDISOBJECT_DEFAULT_SCRIPT;
+    
+    private String logicalScriptDirLocation =Constants.LOGICAL_SCRIPTDIR_IDQ;
+    private String logicalLocationIdqSubDir = Constants.LOGICAL_LOCATION_IDQSUBDIR;
+    private String jobDir =Constants.IDQ_JOBDIR;
     
     private boolean appendToFile=false;
     
@@ -165,11 +173,51 @@ public List doTable(List<List<String>> inputTable) {
         addRowToReturnTable(getResultRow());
     }
 
+    readParameterFile();
+    
+    /* For now, the fixture does not execute the steps itself, but relies on the IDQRunJob.sh script
+     * Call: IDQRunJob.sh -jobfile <thejobfile>
+     * 
+     * 
+     */
 
-    List<String> logFileRow = new ArrayList<String>();
+    ExecuteScript script = new ExecuteScript(getJobScript(), "JobDefinition");
+    script.setLogLevel(getLogLevel());
+    script.setScriptLocation(getLogicalScriptDirLocation() + " " + getLogicalLocationIdqSubDir() );
+    script.setLogLevel(Constants.DEBUG);
+    script.setCaptureErrors(Constants.YES);
+    script.setCaptureOutput(Constants.YES);
+    script.addParameter("-log2parent");
+    script.addParameter(Constants.YES);
+    script.addParameter("-jobfile");
+    script.addParameter(getJobDir() + getApplicationName() + '-' + getJobName() +".job");
+        try {
+            String rc = script.runScriptReturnCode();
+            if("0".equals(rc)) {
+                log(myName, Constants.INFO, "Script result","Script " + getJobScript() + "  returned >0<. Script log file is >" + script.getLogFilename() +"<.");
+                setError(Constants.OK, Constants.NOERRORS);
+            } else {
+                logMessage="Script >" + getJobScript() + "< returned >" + rc +"<. log file >" + script.getLogFilename() +"<.";
+                log(myName, Constants.ERROR, "Script result", logMessage);
+                setError(Constants.ERROR,logMessage);
+            }
+        } catch (ExecuteScriptStopTest e) {
+            logMessage="Error running >" + getJobScript() +"<. Exception: " + e.toString();
+            log(myName, Constants.ERROR, "Exception handler", logMessage);
+            setError(Constants.ERROR,logMessage);            
+        }
+
+
+        List<String> logFileRow = new ArrayList<String>();
     logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +"log file");
     logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +getLogFilename());
     addRowToReturnTable (logFileRow);	
+    
+    //add a row for the link to the script log file
+    logFileRow = new ArrayList<String>();
+    logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +"script log file");
+    logFileRow.add(Constants.FITNESSE_PREFIX_REPORT + script.getLogFilename());
+    addRowToReturnTable (logFileRow);   
 
     return getReturnTable();
     //return inputTable;
@@ -374,7 +422,7 @@ private String processRow(List<String> row) {
         returnRow.add(0,Constants.FITNESSE_PREFIX_IGNORE.concat("Not a step"));
         setResultRow(returnRow);
         writeToJobFile(row);
-        logMessage="Row >" + row.get(0) +"< is not numeric and will be ignored as task.";
+        logMessage="Row >" + row.get(0) +"< is not numeric and is ignored as task.";
         log(myName, Constants.INFO, myArea, logMessage);      
         return Constants.OK;
     }
@@ -398,9 +446,11 @@ private String processRow(List<String> row) {
         setStepNumber(Integer.parseInt(row.get(Constants.JOB_STEP_COLNR)));
         setStepName(row.get(Constants.JOB_STEPNAME_COLNR));
         setStepType(row.get(Constants.JOB_STEPTYPE_COLNR));
+        
+        setResult(Constants.UNKNOWN);
             
         //Ok. The step has a valid step type configured, so it must have at least 3 fields (checked by isValidStepType)
-        switch(row.get(2).toLowerCase().replaceAll(" ", "")) {
+/*        switch(row.get(2).toLowerCase().replaceAll(" ", "")) {
         case Constants.JOB_STEPTYPE_IDQ:
             processIDQRequest(row);
             break;
@@ -421,7 +471,7 @@ private String processRow(List<String> row) {
             log(myName, Constants.DEBUG, myArea, logMessage);      
             break;
         }
-    } else {
+  */  } else {
         returnRow=formatRow(returnRow,Constants.JOB_STEPTYPE_COLNR,Constants.FITNESSE_PREFIX_IGNORE);
         returnRow=formatRow(returnRow,Constants.FITNESSE_PREFIX_REPORT);
         returnRow.add(0,Constants.JOB_STEPTYPE_NOT_IMPLEMENTED);
@@ -768,26 +818,102 @@ private void addRowToReturnTable (List <String> row) {
 } 
 
 private void readParameterFile(){	 
-        String myName="readParameterFile";
-        String myArea="reading parameters";
-        String logMessage = Constants.NOT_INITIALIZED;
+    String myName="readParameterFile";
+    String myArea="reading parameters";
+    String logMessage = Constants.NOT_INITIALIZED;
+    String result =Constants.NOT_FOUND;
 
-        url = GetParameters.GetDatabaseURL(databaseConnDef);
+    url = GetParameters.GetDatabaseURL(databaseConnDef);
+    logMessage="database url >" + url +"<.";       log(myName, Constants.VERBOSE, myArea, logMessage);
 
-        logMessage="database url >" + url +"<.";       log(myName, Constants.VERBOSE, myArea, logMessage);
+    logUrl = GetParameters.GetLogUrl();
+    logMessage = "logURL >" + logUrl +"<.";   log(myName, Constants.DEBUG, myArea, logMessage);
 
-	    logUrl = GetParameters.GetLogUrl();
-	    logMessage = "logURL >" + logUrl +"<.";
-	    log(myName, Constants.DEBUG, myArea, logMessage);
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RESULT_FORMAT);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setResultFormat(Constants.DEFAULT_RESULT_FORMAT);
+    }
+    else {
+        setResultFormat(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "resultFormat >" + getResultFormat() +"<.");
 
-	    resultFormat =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RESULT_FORMAT);
-	    if(Constants.NOT_FOUND.equals(resultFormat))
-	        resultFormat =Constants.DEFAULT_RESULT_FORMAT;
-	    logMessage = "resultFormat >" + resultFormat +"<.";
-	    log(myName, Constants.DEBUG, myArea, logMessage);
-	}
+    //Script to use for RunIdqJob
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQJOB_SCRIPT);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setJobScript(Constants.RUNIDQJOB_DEFAULT_SCRIPT);
+    }
+    else {
+        setJobScript(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "jobScript (if used) is >" + getJobScript() +"<.");
+
+    //Script to use for RunIdqProfile
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQPROFILE_SCRIPT);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setProfileScript(Constants.RUNIDQPROFILE_DEFAULT_SCRIPT);
+    }
+    else {
+        setProfileScript(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "profileScript (if used) is >" + getProfileScript() +"<.");
+
+    //Script to use for RunIdqMapping
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQMAPPING_SCRIPT);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setMappingScript(Constants.RUNIDQMAPPING_DEFAULT_SCRIPT);
+    }
+    else {
+        setMappingScript(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "mappingScript (if used) is >" + getMappingScript() +"<.");
+
+    //Script to use for RunIdqDisObject
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQDISOBJECT_SCRIPT);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setDisObjectScript(Constants.RUNIDQDISOBJECT_DEFAULT_SCRIPT);
+    }
+    else {
+        setDisObjectScript(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "DisObjectScript (if used) is >" + getDisObjectScript() +"<.");
+
+    //Logical location, configured in directory.properties 
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_LOGICAL_SCRIPTDIR_IDQ);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setLogicalScriptDirLocation(Constants.LOGICAL_SCRIPTDIR_IDQ);
+    }
+    else {
+        setLogicalScriptDirLocation(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "Logical IDQ Script Location (if used) is >" + getLogicalScriptDirLocation() +"<.");
+
+    //sub directory in logical location, configured in directory.properties, in which IDQ scripts are located 
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_LOGICAL_LOCATION_IDQSUBDIR);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setLogicalLocationIdqSubDir(Constants.LOGICAL_LOCATION_IDQSUBDIR);
+    }
+    else {
+        setLogicalLocationIdqSubDir(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "Logical Location sub directory for idq scripts (if used) is >" + getLogicalLocationIdqSubDir() +"<.");
+
+    //
+    //Job directory where to create the job file
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_IDQ_JOBDIR);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setJobDir(Constants.IDQ_JOBDIR);
+    }
+    else {
+        setJobDir(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "Job directory >" + getJobDir() +"<.");
+    
 
 
+    log(myName, Constants.DEBUG, "end", "End of readParameterFile");
+    
+}
 
 private void log(String name, String level, String location, String logText) {
             if(Constants.logLevel.indexOf(level.toUpperCase()) > getIntLogLevel()) {
@@ -884,7 +1010,7 @@ private void writeToJobFile(List<String> row) {
         }
     parsedRow = parsedRow+Constants.JOB_COLUMN_SEPARATOR;
     
-    String jobFile = Constants.JOB_DIR + getApplicationName() + "-" + getJobName() + ".job";
+    String jobFile = getJobDir() + getApplicationName() + "-" + getJobName() + ".job";
         
     try {
         FileWriter jobWriter = new FileWriter( jobFile, appendToFile);
@@ -1072,7 +1198,71 @@ private void writeToJobFile(List<String> row) {
         this.stepIdqObjectType = stepIdqObjectType;
     }
 
+    public void setResultFormat(String resultFormat) {
+        this.resultFormat = resultFormat;
+    }
+
+    public String getResultFormat() {
+        return resultFormat;
+    }
+
     public String getStepIdqObjectType() {
         return stepIdqObjectType;
+    }
+
+    public void setJobScript(String jobScript) {
+        this.jobScript = jobScript;
+    }
+
+    public String getJobScript() {
+        return jobScript;
+    }
+
+    public void setProfileScript(String profileScript) {
+        this.profileScript = profileScript;
+    }
+
+    public String getProfileScript() {
+        return profileScript;
+    }
+
+    public void setMappingScript(String mappingScript) {
+        this.mappingScript = mappingScript;
+    }
+
+    public String getMappingScript() {
+        return mappingScript;
+    }
+
+    public void setDisObjectScript(String disobjectScript) {
+        this.disObjectScript = disobjectScript;
+    }
+
+    public String getDisObjectScript() {
+        return disObjectScript;
+    }
+
+    public void setLogicalScriptDirLocation(String logicalScriptDirLocation) {
+        this.logicalScriptDirLocation = logicalScriptDirLocation;
+    }
+
+    public String getLogicalScriptDirLocation() {
+        return logicalScriptDirLocation;
+    }
+
+    public void setJobDir(String jobDir) {
+        this.jobDir = jobDir;
+    }
+
+    public String getJobDir() {
+        return jobDir;
+    }
+
+    public void setLogicalLocationIdqSubDir(String logicalLocationIdqSubDir) {
+        this.logicalLocationIdqSubDir = logicalLocationIdqSubDir;
+    }
+
+    public String getLogicalLocationIdqSubDir() {
+        return logicalLocationIdqSubDir;
     }
 }

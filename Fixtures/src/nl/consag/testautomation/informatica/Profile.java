@@ -14,20 +14,25 @@ import java.util.Collections;
 import java.util.List;
 
 import nl.consag.supporting.Constants;
+import nl.consag.supporting.GetParameters;
 import nl.consag.testautomation.supporting.GetDatabaseTable;
 
 //import static supporting.ListUtility.list;
 import nl.consag.supporting.Logging;
 
-import nl.consag.testautomation.scripts.RunScript;
+import nl.consag.testautomation.scripts.ExecuteScript;
 
-import nl.consag.testautomation.scripts.RunScript.RunScriptStopTest;
+import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 import org.apache.commons.lang3.StringUtils;
+
+import org.openqa.selenium.internal.seleniumemulation.RunScript;
 
 public class Profile {
 
     private String className = "Profile";
+    private static final String version = "20170225.0";
+
     private String logFileName = Constants.NOT_INITIALIZED;
     private String startDate = Constants.NOT_INITIALIZED;
     private String context = Constants.DEFAULT;
@@ -41,6 +46,9 @@ public class Profile {
     private String profileListResult = Constants.OK;
     private String numberOfProfilesResult = Constants.OK;
     private List<List<String>> profileList=new ArrayList<List<String>>();
+
+    // script names
+    private String profileScript =Constants.RUNIDQPROFILE_DEFAULT_SCRIPT;
 
     //Queries taken from Informatica Support DocId 322200
     private String sqlMRProfiles ="SELECT /* FitNesse Fixture Profile (c) Consag Consultancy Services B.V. */ " +
@@ -241,7 +249,7 @@ public class Profile {
     /**
      * @return
      */
-    public List<List<List<String>>> query() throws nl.consag.testautomation.scripts.RunScript.RunScriptStopTest {
+    public List<List<List<String>>> query() throws ExecuteScriptStopTest {
     String myName="query";
     String myArea="init";
     String logMessage = Constants.NOT_INITIALIZED;
@@ -293,9 +301,10 @@ public class Profile {
      * Need to match query result (rows with column values) to columns as expected in FitNesse test page
      * Each column value must be preceded with the column name. For each record.
      */
-    private List<List<List<String>>> createResultSet(List<List<String>> queryResult, List<String> colNames) throws RunScriptStopTest {
+    private List<List<List<String>>> createResultSet(List<List<String>> queryResult, List<String> colNames) throws ExecuteScriptStopTest {
         String myName="createResultSet";
         List<List<List<String>>> out = new ArrayList<List<List<String>>>();
+        readParameterFile();
         
         for(List<String> row : queryResult) {
             List<List<String>> rowColValPairs = new ArrayList<List<String>>();
@@ -313,7 +322,7 @@ public class Profile {
                 List<String> colAndVal = new ArrayList<String>();
                 colAndVal.add(Constants.REFRESH_PROFILE);
                 
-                RunScript rs = new RunScript(Constants.RUNIDQPROFILE_SCRIPT,className + "-" + myName);
+                ExecuteScript rs = new ExecuteScript(getProfileScript(),className + "-" + myName);
                 rs.setLogLevel(getLogLevel());
                 rs.setScriptLocation("scripts idq");
                 rs.addParameter(currentProfilePathName);
@@ -433,7 +442,7 @@ public class Profile {
         this.refreshProfileResult =result;
     }
     
-    public String refreshProfilesInList(String onError) throws nl.consag.testautomation.scripts.RunScript.RunScriptStopTest {
+    public String refreshProfilesInList(String onError) throws ExecuteScript.ExecuteScriptStopTest {
         String myName="refreshProfilesInList";
         String myArea="init";
         String rc = Constants.OK;
@@ -520,14 +529,16 @@ public class Profile {
     public String getObjectName() {
         return this.objectName;
     }
-    public String refreshProfile() throws nl.consag.testautomation.scripts.RunScript.RunScriptStopTest {
+    public String refreshProfile() throws ExecuteScript.ExecuteScriptStopTest {
         return refreshProfile(getObjectWithPath(), getProfileName());
     }
     
-    private String refreshProfile(String objectPath, String profileName) throws nl.consag.testautomation.scripts.RunScript.RunScriptStopTest {
+    private String refreshProfile(String objectPath, String profileName) throws ExecuteScript.ExecuteScriptStopTest {
         String myName="refreshProfile";
+        
+        readParameterFile();
 
-        RunScript rs = new RunScript(Constants.RUNIDQPROFILE_SCRIPT,className + "-" + myName + "-" + profileName);
+        ExecuteScript rs = new ExecuteScript(getProfileScript(),className + "-" + myName + "-" + profileName);
         rs.setLogLevel(getLogLevel());
         rs.setScriptLocation("scripts idq");
         rs.setCaptureOutput(Constants.YES);
@@ -555,6 +566,41 @@ public class Profile {
         
         return getErrorCode();
         
+    }
+
+    public void setProfileScript(String profileScript) {
+        this.profileScript = profileScript;
+    }
+
+    public String getProfileScript() {
+        return profileScript;
+    }
+
+    /**
+     * @return fixture version info
+     */
+    public static String getVersion() {
+        return version;
+    }
+
+    private void readParameterFile() {
+      String logMessage = Constants.NOT_INITIALIZED;
+      String myName="readParamterFile";
+      String myArea="param search result";
+      String result=Constants.NOT_FOUND;
+        
+
+        //Script to use for RunIdqProfile
+        result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQPROFILE_SCRIPT);
+        if(Constants.NOT_FOUND.equals(result)) {
+            setProfileScript(Constants.RUNIDQPROFILE_DEFAULT_SCRIPT);
+        }
+        else {
+            setProfileScript(result);
+        }
+        log(myName, Constants.DEBUG, myArea, "profileScript (if used) will be >" + getProfileScript() +"<.");
+
+
     }
 
     static class ProfileStopTest extends Exception {
