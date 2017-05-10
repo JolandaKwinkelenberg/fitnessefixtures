@@ -4,7 +4,7 @@
  * @author Edward Crain
  * @version 11 October 2014
  */
-package examples;
+package nl.consag.testautomation.examples;
 
 import java.util.ArrayList;
 import java.util.List;
