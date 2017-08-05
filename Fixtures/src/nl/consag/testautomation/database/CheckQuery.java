@@ -20,7 +20,6 @@ import java.text.ParseException;
 
  import java.util.*;
 
-@SuppressWarnings("WeakerAccess")
 public class CheckQuery {
     
     
@@ -28,7 +27,7 @@ public class CheckQuery {
                private int numberOfTableColumns =7; // first column stores timestamp and is not populated by user data.
         private String columnNames ="CHECK_DATE, TABLE_NAME, COLUMN_NAME, CHECK1, CHECK2, CHECK3, CHECK4, CHECK5";
 
-          private final String className = "CheckQuery";
+          private String className = "CheckQuery";
           private String logFileName = Constants.NOT_INITIALIZED;
           private String context = Constants.DEFAULT;
           private String startDate = Constants.NOT_INITIALIZED;
@@ -161,7 +160,7 @@ public class CheckQuery {
      * @return
      */
     public String columnsOk() {
-       String returnMessage;
+       String returnMessage="Unknown";
      returnMessage =Integer.toString(rowEqualValues);  
        return returnMessage;
      }
@@ -175,7 +174,7 @@ public class CheckQuery {
      * @return
      */
     public String columnsNotOk() {
-       String returnMessage;
+       String returnMessage="Unknown";
      returnMessage =Integer.toString(rowUnequalValues);  
        return returnMessage;
      }
@@ -190,7 +189,7 @@ public class CheckQuery {
 
  
            private boolean hasVar(String query, String varName) {
-               if(query.contains(varName)) return true;
+               if(query.contains(varName)) return true; 
                else return false;
            }
  
@@ -894,7 +893,7 @@ public class CheckQuery {
                 }
 
     /**
-     * @param qry Do not use. Use setQuery instead.
+     * @param qry. Do not use. Use setQuery instead.
      */
     public void query(String qry) {
                   setQuery(qry);  
@@ -949,7 +948,7 @@ public class CheckQuery {
                       }
 
     /**
-     * @param dbname Do not use. Use setCheckDatabase instead.
+     * @param dbname. Do not use. Use setCheckDatabase instead.
      */
     public void checkDatabase(String dbname) {
                   setCheckDatabase(dbname);  
@@ -971,7 +970,7 @@ public class CheckQuery {
                       }
 
     /**
-     * @param tblname Do not use. Use setCheckTable instead.
+     * @param tblname. Do not use. Use setCheckTable instead.
      */
     public void checkTable(String tblname) {
                   setCheckTable(tblname);  
@@ -1096,7 +1095,7 @@ public class CheckQuery {
                       columnValues+=  ",null";     
                       c++;
                   }
-
+                  
                QueryString =
                   "INSERT INTO " + getCheckTable() + " (" + columnNames +
                   ")  VALUES (" + columnValues + ")";
@@ -1200,7 +1199,7 @@ public class CheckQuery {
     }
 
     /**
-     * @param checkType Do not use. Use setCheckFunction instead.
+     * @param checkType. Do not use. Use setCheckFunction instead.
      */
     public void checkFunction (String checkType) {
         setCheckFunction(checkType);
