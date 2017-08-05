@@ -4,6 +4,7 @@
  * @version 20161225.0 - initial version - Skeleton
  * @version 20170113.0 - implemented IDQ Mapping
  * @version 20170225.0 - scripts can be configured in fixture.properties
+ * @version 20170325.0 - support for new step type wait
  */ 
 package nl.consag.testautomation.scripts;
 
@@ -33,7 +34,7 @@ import nl.consag.testautomation.informatica.Profile;
 import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 public class JobDefinition {
-    private static String version ="20170225.0";
+    private static String version ="20170325.0";
 
     private String className = "JobDefinition";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -133,6 +134,7 @@ public JobDefinition(String context, String logLevel) {
     this.logLevel = getIntLogLevel();
     }
 
+
 /**
  * @param FitNesse input table
  * @return FitNesse table with results
@@ -191,24 +193,33 @@ public List doTable(List<List<String>> inputTable) {
     script.addParameter(Constants.YES);
     script.addParameter("-jobfile");
     script.addParameter(getJobDir() + getApplicationName() + '-' + getJobName() +".job");
+    List<String> resultRow = new ArrayList<String>();
+    String rc=Constants.UNKNOWN;
+    String errMsg=Constants.UNKNOWN;
+
         try {
-            String rc = script.runScriptReturnCode();
+            rc = script.runScriptReturnCode();
+//            errMsg = script.getErrorMessage();
             if("0".equals(rc)) {
                 log(myName, Constants.INFO, "Script result","Script " + getJobScript() + "  returned >0<. Script log file is >" + script.getLogFilename() +"<.");
                 setError(Constants.OK, Constants.NOERRORS);
+                resultRow.add(Constants.FITNESSE_PREFIX_PASS + Constants.NOERRORS);
             } else {
                 logMessage="Script >" + getJobScript() + "< returned >" + rc +"<. log file >" + script.getLogFilename() +"<.";
                 log(myName, Constants.ERROR, "Script result", logMessage);
                 setError(Constants.ERROR,logMessage);
+                resultRow.add(Constants.FITNESSE_PREFIX_FAIL + "Script >" + getJobScript() + "< returned >" + rc +"< with message >" +errMsg +"<." );
             }
         } catch (ExecuteScriptStopTest e) {
             logMessage="Error running >" + getJobScript() +"<. Exception: " + e.toString();
             log(myName, Constants.ERROR, "Exception handler", logMessage);
             setError(Constants.ERROR,logMessage);            
+            resultRow.add(Constants.FITNESSE_PREFIX_FAIL + "rc=>" +rc +"< - errMsg=>" +errMsg+"<. Exception =>" + e.toString() +"<.");
         }
 
+    addRowToReturnTable (resultRow);   
 
-        List<String> logFileRow = new ArrayList<String>();
+    List<String> logFileRow = new ArrayList<String>();
     logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +"log file");
     logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +getLogFilename());
     addRowToReturnTable (logFileRow);	
@@ -253,10 +264,24 @@ private List<String> orderRowsByStepNumber(List<String> inputTable, String delim
     String logMessage = Constants.NOT_INITIALIZED;
     String myName="orderRowsByStepNumber";
     String myArea="Init";
-    List<String> orderedList = new ArrayList<String>();
+    List<String> orderedList; // = new ArrayList<String>();
     
     orderedList=inputTable.stream().skip(2).collect(Collectors.toList());
-    Collections.sort(orderedList);
+    
+    Collections.sort(orderedList, new Comparator<String>() {
+        public int compare(String o1, String o2) {
+            return extractInt(o1) - extractInt(o2);
+        }
+
+        int extractInt(String s) {
+            //String num = s.replaceAll("\\D", "");
+            String num = s.substring(0, s.indexOf(Constants.FITNESSE_DELIMITER) -1);
+            // return 0 if no digits found
+            return num.isEmpty() ? 0 : Integer.parseInt(num);
+        }
+    });
+
+//    Collections.sort(orderedList);
     orderedList.add(0,inputTable.get(0));
     orderedList.add(1,inputTable.get(1));
     
