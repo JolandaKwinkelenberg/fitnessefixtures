@@ -28,10 +28,8 @@ import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 import org.apache.commons.lang3.StringUtils;
 
-import org.openqa.selenium.internal.seleniumemulation.RunScript;
-
 public class Mapping {
-    private static final String version = "20170225.0";
+    private static final String version = "20170510.0"; // removed incorrect references
 
     private String className = "Mapping";
     private String logFileName = Constants.NOT_INITIALIZED;

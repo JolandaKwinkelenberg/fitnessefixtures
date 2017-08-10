@@ -1,0 +1,200 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<jpr:project xmlns:jpr="http://xmlns.oracle.com/ide/project">
+   <hash n="component-versions">
+      <value n="oracle.adfdt.controller.common.migrator.ProjectMigrator" v="11.1.1.1.0"/>
+      <value n="oracle.adfdt.controller.jsf2.diagram.migrate.JsfNodeMigratorHelper" v="11.1.1.1.0"/>
+      <value n="oracle.ide.model.Project" v="12.2.1.0.0"/>
+      <value n="oracle.ide.model.ResourcePathsMigrator" v="11.1.1.1.0"/>
+      <value n="oracle.ideimpl.model.TechnologyScopeUpdateMigrator" v="11.1.2.0.0.6"/>
+      <value n="oracle.jdeveloper.dbmodeler.Migration" v="12.1.1.0.0"/>
+      <value n="oracle.jdeveloper.ejb.EjbMigrator" v="11.1.1.1.0"/>
+      <value n="oracle.jdeveloper.library.ProjectLibraryMigrator" v="11.1.1.1.0"/>
+      <value n="oracle.jdeveloper.maven.migrator.POMNodeMigrator" v="12.2.1.0.0"/>
+      <value n="oracle.jdeveloper.model.OutputDirectoryMigrator" v="11.1.1.1.0"/>
+      <value n="oracle.jdevimpl.deploy.jps.JpsDataMigrator" v="11.1.1.1.0"/>
+      <value n="oracle.jdevimpl.deploy.migrators.DeploymentMigrator" v="12.1.2.0.1"/>
+      <value n="oracle.jdevimpl.jsp.JspMigrator" v="11.1.1"/>
+      <value n="oracle.jdevimpl.offlinedb.migration.OfflineDBProjectMigrator" v="12.1.1.0.0"/>
+      <value n="oracle.jdevimpl.offlinedb.migration.SXMLOfflineDBProjectMigrator" v="12.1.4.0.0"/>
+      <value n="oracle.jdevimpl.webapp.facelets.libraries.FaceletsLibraryMigrator" v="12.2.1.0.0"/>
+      <value n="oracle.jdevimpl.webapp.jsp.libraries.JspLibraryMigrator" v="12.1.4.0.0"/>
+      <value n="oracle.jdevimpl.webapp.WebAppContentSetNodeMigratorHelper" v="11.1.1"/>
+      <value n="oracle.jdevimpl.webapp.WebAppProjectNodeMigratorHelper" v="12.2.1.0.0"/>
+      <value n="oracle.jdevimpl.webservices.rest.migration.RestAppClassMigrator" v="12.1.3.0.0"/>
+      <value n="oracle.jdevimpl.webservices.rest.migration.RestJerseyLibMigrator" v="12.1.3.0.0"/>
+      <value n="oracle.jdevimpl.webservices.rest.migration.RestLibraryMigrator" v="12.1.1.0.0"/>
+      <value n="oracle.jdevimpl.webservices.rest.migration.RestOwsmPolicyMigrator" v="12.1.3.0.0"/>
+      <value n="oracle.jdevimpl.webservices.rest.migration.RestPathMigrator" v="11.1.2.0.0"/>
+      <value n="oracle.jdevimpl.webservices.rest.migration.RestWebAppMigrator" v="12.1.3.0.0"/>
+      <value n="oracle.jdevimpl.webservices.rest.migration.RestWeblogicWebAppMigrator" v="12.1.3.0.0"/>
+      <value n="oracle.jdevimpl.webservices.WebServicesMigratorHelper" v="11.1.1.1.0"/>
+      <value n="oracle.jdevimpl.xml.wl.WeblogicMigratorHelper" v="11.1.1.1.0"/>
+      <value n="oracle.modeler.bmmigrate.management.Migration" v="11.1.1.1.0"/>
+      <value n="oracle.toplink.workbench.addin.migration.PersistenceProjectMigrator" v="11.1.1.1.0"/>
+      <value n="oracle.toplink.workbench.addin.migration.TopLinkProjectMigrator" v="11.1.1.1.0"/>
+   </hash>
+   <list n="contentSets">
+      <string v="oracle.mds.internal.dt.ide.MDSLibraryCustCSProvider/mdsContentSet"/>
+      <string v="oracle.mds.internal.dt.ide.MDSADFLibVirtualNodeCSProvider/mdsLibVirtualNodeContentSet"/>
+      <string v="oracle.jdeveloper.model.J2eeSettings/webContentSet"/>
+      <string v="oracle.jdeveloper.model.PathsConfiguration/javaContentSet"/>
+      <string v="oracle.ide.model.ResourcePaths/resourcesContentSet"/>
+      <string v="oracle.jdeveloper.offlinedb.model.OfflineDBProjectSettings/offlineDBContentSet"/>
+      <string v="oracle.adfdtinternal.model.ide.settings.ADFMSettings/adfmContentSet"/>
+      <string v="oracle.bm.commonIde.data.project.ModelerProjectSettings/modelersContentSet"/>
+      <string v="oracle.toplink.workbench.addin/toplinkContentSet"/>
+   </list>
+   <value n="defaultPackage" v="nl.consag.testautomation"/>
+   <hash n="oracle.ide.model.ResourcePaths">
+      <hash n="resourcesContentSet">
+         <list n="constituent-sets">
+            <hash>
+               <list n="pattern-filters">
+                  <string v="+index.html"/>
+               </list>
+               <list n="url-path">
+                  <url path="javadoc/"/>
+               </list>
+            </hash>
+            <hash>
+               <list n="pattern-filters">
+                  <string v="+*"/>
+               </list>
+               <list n="url-path">
+                  <url path="."/>
+               </list>
+            </hash>
+         </list>
+         <list n="url-path"/>
+      </hash>
+   </hash>
+   <hash n="oracle.ide.model.TechnologyScopeConfiguration">
+      <list n="technologyScope">
+         <string v="HTML"/>
+         <string v="JAVASCRIPT"/>
+         <string v="Java"/>
+         <string v="XML"/>
+      </list>
+   </hash>
+   <hash n="oracle.jdeveloper.compiler.OjcConfiguration">
+      <value n="webIANAEncoding" v="UTF-8"/>
+   </hash>
+   <hash n="oracle.jdeveloper.deploy.dt.DeploymentProfiles">
+      <hash n="profileDefinitions">
+         <hash n="jar">
+            <hash n="archiveOptions">
+               <value n="hasManifest" v="false"/>
+            </hash>
+            <hash n="fileGroups">
+               <list n="groups">
+                  <hash>
+                     <list n="contributors">
+                        <hash>
+                           <value n="type" v="2"/>
+                        </hash>
+                        <hash>
+                           <value n="type" v="7"/>
+                        </hash>
+                     </list>
+                     <value n="displayName" v="Project Output"/>
+                     <hash n="filters">
+                        <list n="rules">
+                           <hash>
+                              <value n="pattern" v="**"/>
+                              <value n="type" v="0"/>
+                           </hash>
+                        </list>
+                     </hash>
+                     <value n="internalName" v="project-output"/>
+                     <value n="type" v="1"/>
+                  </hash>
+               </list>
+            </hash>
+            <url n="jarURL" path="../../../../Dropbox/jdeveloper/consagdevelopment/FitNesseFixtures/Fixtures/deploy/ConsagFitNesseFixtures.jar"/>
+            <value n="profileClass" v="oracle.jdeveloper.deploy.jar.ArchiveProfile"/>
+            <value n="profileName" v="jar"/>
+         </hash>
+         <hash n="jar_with_main">
+            <hash n="archiveOptions">
+               <value n="hasManifest" v="true"/>
+               <value n="mainClass" v="nl.consag.testautomation.ConsagFitNesseFixtures"/>
+            </hash>
+            <hash n="fileGroups">
+               <list n="groups">
+                  <hash>
+                     <list n="contributors">
+                        <hash>
+                           <value n="type" v="2"/>
+                        </hash>
+                        <hash>
+                           <value n="type" v="7"/>
+                        </hash>
+                     </list>
+                     <value n="displayName" v="Project Output"/>
+                     <hash n="filters">
+                        <list n="rules">
+                           <hash>
+                              <value n="pattern" v="**"/>
+                              <value n="type" v="0"/>
+                           </hash>
+                        </list>
+                     </hash>
+                     <value n="internalName" v="project-output"/>
+                     <value n="type" v="1"/>
+                  </hash>
+               </list>
+            </hash>
+            <url n="jarURL" path="deploy/ConsagFitNesseFixtures.jar"/>
+            <value n="profileClass" v="oracle.jdeveloper.deploy.jar.ArchiveProfile"/>
+            <value n="profileName" v="jar_with_main"/>
+         </hash>
+      </hash>
+      <list n="profileList">
+         <string v="jar_with_main"/>
+         <string v="jar"/>
+      </list>
+   </hash>
+   <hash n="oracle.jdeveloper.model.PathsConfiguration">
+      <hash n="javaContentSet">
+         <list n="pattern-filters">
+            <string v="+**"/>
+         </list>
+         <list n="url-path">
+            <url path="src/main/java/"/>
+         </list>
+      </hash>
+   </hash>
+   <hash n="oracle.jdevimpl.config.JProjectLibraries">
+      <list n="exportedReferences"/>
+      <hash n="internalDefinitions">
+         <list n="jdkDefinitions">
+            <hash>
+               <list n="classPath">
+                  <url protocol="jar" path="file:/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Classes/jsfd.jar!/"/>
+                  <url protocol="jar" path="file:/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Classes/classes.jar!/"/>
+                  <url protocol="jar" path="file:/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/Resources/Java/JavaRuntimeSupport.jar!/"/>
+                  <url protocol="jar" path="file:/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Classes/ui.jar!/"/>
+                  <url protocol="jar" path="file:/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Classes/laf.jar!/"/>
+                  <url protocol="jar" path="file:/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Classes/sunrsasign.jar!/"/>
+                  <url protocol="jar" path="file:/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Classes/jsse.jar!/"/>
+                  <url protocol="jar" path="file:/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Classes/jce.jar!/"/>
+                  <url protocol="jar" path="file:/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Classes/charsets.jar!/"/>
+               </list>
+               <value n="description" v="1.6.0_65"/>
+               <list n="docPath">
+                  <url protocol="http" host="docs.oracle.com" path="/javase/6/docs/api/"/>
+               </list>
+               <value n="id" v="1.6.0_65"/>
+               <url n="javaExecutable" protocol="file" path="/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/bin/java"/>
+               <url n="sdkBinDir" protocol="file" path="/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/bin/"/>
+               <value n="version" v="1.6.0_65"/>
+            </hash>
+         </list>
+         <list n="libraryDefinitions"/>
+      </hash>
+      <list n="libraryReferences"/>
+   </hash>
+   <hash n="oracle.jdevimpl.config.JProjectPaths">
+      <url n="outputDirectory" path="../../../../Dropbox/jdeveloper/consagdevelopment/FitNesseFixtures/Fixtures/target/classes/"/>
+   </hash>
+</jpr:project>

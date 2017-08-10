@@ -1,6 +1,5 @@
 /*
  * @author Jac. Beekers
- * @version 20170107.0 (jar changed, not this class)
  * @since   January 2016
  */
 
@@ -30,7 +29,7 @@ import nl.consag.supporting.Constants;
 
 public class ConsagFitNesseFixtures {
     private static final String className="ConsagFitNesseFixtures";
-    private static final String version = "20170225.0";
+    private static final String version = "20170806.0";
     private static int logLevel = 3;
     private static int logEntries = 0;
     private static boolean noClassFilter =true;

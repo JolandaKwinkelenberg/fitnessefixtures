@@ -351,6 +351,7 @@ public class Constants {
     public static final String JOB_STEPTYPE_DB2 = "rundb2";
     public static final String JOB_STEPTYPE_DAC = "rundac";
     public static final String JOB_STEPTYPE_SCRIPT = "runscript";
+    public static final String JOB_STEPTYPE_WAIT ="wait";
 
     public static final List<String> JOB_STEPTYPES = Collections.unmodifiableList(Arrays.asList(
          JOB_STEPTYPE_IDQ
@@ -359,6 +360,7 @@ public class Constants {
         ,JOB_STEPTYPE_DB2
         ,JOB_STEPTYPE_DAC
         ,JOB_STEPTYPE_SCRIPT
+        ,JOB_STEPTYPE_WAIT
         ));
 
     public static final List<String> JOB_IMPLEMENTED_STEPTYPES = Collections.unmodifiableList(Arrays.asList(
@@ -368,6 +370,7 @@ public class Constants {
     ,JOB_STEPTYPE_DB2
     ,JOB_STEPTYPE_DAC
     ,JOB_STEPTYPE_SCRIPT
+    ,JOB_STEPTYPE_WAIT
         ));
     public static final String JOB_STEPTYPE_NOT_IMPLEMENTED ="Job Step Type not in the list of implemented types.";
     

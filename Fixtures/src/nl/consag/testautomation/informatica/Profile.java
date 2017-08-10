@@ -26,12 +26,10 @@ import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 import org.apache.commons.lang3.StringUtils;
 
-import org.openqa.selenium.internal.seleniumemulation.RunScript;
-
 public class Profile {
 
     private String className = "Profile";
-    private static final String version = "20170225.0";
+    private static final String version = "20170510.0"; // removed incorrect references
 
     private String logFileName = Constants.NOT_INITIALIZED;
     private String startDate = Constants.NOT_INITIALIZED;

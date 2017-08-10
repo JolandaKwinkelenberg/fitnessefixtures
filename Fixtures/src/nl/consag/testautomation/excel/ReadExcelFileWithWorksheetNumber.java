@@ -3,7 +3,8 @@
  * @author Edward Crain
  * @version 22 February 2015
  */
-package examples;
+package nl.consag.testautomation.excel;
+
 import java.util.ArrayList;
 import java.util.List;
 
