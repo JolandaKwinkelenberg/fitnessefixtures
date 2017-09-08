@@ -4,24 +4,22 @@
  * @author Edward Crain
  * @since 21 March 2015
  * @version 20160108.0 : Added result of readWorksheet to log and check on ResultMessage. Removed some copy-paste bugs in log messages.
- * 
+ * @version 20170908.0 : bugfix for empty excel cells
+ * @version 20170909.0 : Made commitsize configurable
  */
 package nl.consag.testautomation.database;
 
-
-import java.io.*;
-
 import java.sql.*;
-import java.sql.Date;
+//import java.sql.Date;
 
 import java.text.DateFormat;
-import java.text.ParseException;
+//import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import java.util.*;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
+//import org.apache.poi.ss.usermodel.Cell;
+//import org.apache.poi.ss.usermodel.DateUtil;
 
 import nl.consag.supporting.Constants;
 import nl.consag.supporting.Logging;
@@ -31,7 +29,8 @@ import nl.consag.supporting.GetParameters;
 
 public class LoadDataFromExcel {
 
-    private static String version = "20160727.0";
+    private static String version = "20170909.0";
+    private int logLevel = 3;
 
     private String className = "LoadDataFromExcel";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -54,6 +53,8 @@ public class LoadDataFromExcel {
     private String concatenatedBindVariables; // variables used to create insert query
     private String databaseType;
     private String databaseConnDef;
+    private int commitSize =Constants.DEFAULT_COMMIT_SIZE_INSERT;
+    private int arraySize =Constants.DEFAULT_ARRAY_SIZE_UPDATE;
 
     private List<List<Attribute>> tableExcelFile;
     private String worksheetName;
@@ -61,12 +62,32 @@ public class LoadDataFromExcel {
     public String returnMessage = "";
     private String errorCode = Constants.OK;
     private String errorMessage = Constants.NOERRORS;
+    private HashMap<Integer,String> previousCellFormatList =new HashMap<Integer,String>();
+    
+    private String appName=Constants.UNKNOWN;
 
     public LoadDataFromExcel(String pContext) {
         java.util.Date started = new java.util.Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         startDate = sdf.format(started);
         context = pContext;
+    }
+
+    public LoadDataFromExcel(String pContext, String logLevel) {
+        java.util.Date started = new java.util.Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        startDate = sdf.format(started);
+        context = pContext;
+        setLogLevel(logLevel);
+    }
+    
+    public LoadDataFromExcel(String pContext, String logLevel, String appName) {
+        java.util.Date started = new java.util.Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        startDate = sdf.format(started);
+        context = pContext;
+        setLogLevel(logLevel);
+        setAppName(appName);
     }
 
     public LoadDataFromExcel() {
@@ -125,7 +146,9 @@ public class LoadDataFromExcel {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         String insertTableSQL;
-        int counter = 0;
+        int commitCounter =0;
+        int arrayCounter =0;
+        int rowCounter =0;
 
         myArea = "read Parameter";
         readParameterFile();
@@ -156,26 +179,49 @@ public class LoadDataFromExcel {
             log(myName, Constants.DEBUG, myArea, logMessage);
 
             for (int row = 1; row < tableExcelFile.size(); row++) {
-                counter++;
+                commitCounter++;
+                arrayCounter++;
+                rowCounter++;
+                //TODO: Prepare only once
                 logMessage = "prepare statement cell no >" + String.valueOf(row) + "<.";
-                log(myName, Constants.DEBUG, myArea, logMessage);
+                log(myName, Constants.VERBOSE, myArea, logMessage);
                 preparedStatement = connection.prepareStatement(insertTableSQL);
                 logMessage = "prepared.";
-                log(myName, Constants.DEBUG, myArea, logMessage);
+                log(myName, Constants.VERBOSE, myArea, logMessage);
                 int bindVariableNo = 0;
-                for (int cell = 0; cell < numberOfColumns; cell++) {
+                int currentRowSize = tableExcelFile.get(row).size();
+                logMessage = "Row #" + Integer.toString(rowCounter) + " has >"  + Integer.toString(currentRowSize) + "< column(s) populated.";
+                log(myName, Constants.DEBUG, myArea, logMessage);
+//                for (int cell = 0; cell < numberOfColumns; cell++) {
+                for (int cell = 0; cell < currentRowSize; cell++) {
                     bindVariableNo++;
                     logMessage = "Binding variable# >" + Integer.toString(bindVariableNo) + "<.";
-                    log(myName, Constants.DEBUG, myArea, logMessage);
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
                     Attribute attribute = new Attribute();
                     attribute = tableExcelFile.get(row).get(cell);
+                    //if a cell is empty, treat is as NULL value if the format is not varchar
+                    //if ("".equals(tableExcelFile.get(row).get(cell))) {
+                    //    log(myName, Constants.DEBUG, myArea, "Empty string detected. Setting column to NULL.");
+                    //    attribute.setText(Constants.SIEBEL_NULL_VALUE);
+                    //}
+                    log(myName,Constants.VERBOSE, myArea,"Cell string value >" + attribute.getText() +"<.");
+                    log(myName,Constants.VERBOSE, myArea,"Cell number value >" + attribute.getNumber() +"<.");
+                    log(myName,Constants.VERBOSE, myArea,"Cell date value >" + attribute.getDate() +"<.");
+                    log(myName,Constants.VERBOSE, myArea,"Cell format >" + attribute.getFormat() +"<.");
+                    if (Constants.EXCEL_CELLFORMAT_UNKNOWN.equals(attribute.getFormat())) {
+                        log(myName,Constants.DEBUG, myArea,"Using previous cell format >" + getPreviousCellFormat(bindVariableNo) + "<for bindvariable >" +Integer.toString(bindVariableNo)
+                                                           +"<.");
+                        attribute.setFormat(getPreviousCellFormat(bindVariableNo));
+                    } else {
+                        setPreviousCellFormat(bindVariableNo,attribute.getFormat());
+                    }
                     if (Constants.SIEBEL_NULL_VALUE.equals(attribute.getText())) {
                         log(myName, Constants.DEBUG, myArea, "Null string detected. Setting columns to NULL.");
                         switch (attribute.getFormat()) {
-                        case "NUMERIC":
+                        case Constants.EXCEL_CELLFORMAT_NUMERIC:
                             preparedStatement.setNull(bindVariableNo, Types.DOUBLE);
                             break;
-                        case "DATE":
+                        case Constants.EXCEL_CELLFORMAT_DATE:
                             preparedStatement.setNull(bindVariableNo, Types.DATE);
                             break;
                         default:
@@ -183,14 +229,19 @@ public class LoadDataFromExcel {
                             break;
                         }
                     } else {
-                        //at that time, we built for 1.6
-                        if (attribute.getFormat() == "NUMERIC") {
+                        switch (attribute.getFormat()) {
+                        case Constants.EXCEL_CELLFORMAT_NUMERIC:
                             preparedStatement.setDouble(bindVariableNo, attribute.getNumber());
-                        } else {
-                            if (attribute.getFormat() == "DATE") {
+                            break;
+                        case Constants.EXCEL_CELLFORMAT_DATE:
+                            if(attribute.getDate() == null) {
+                                preparedStatement.setNull(bindVariableNo, Types.DATE);
+                            } else {
                                 java.sql.Timestamp timestamp = new java.sql.Timestamp(attribute.getDate().getTime());
                                 preparedStatement.setTimestamp(bindVariableNo, timestamp);
-                            } else { //String, boolean and others
+                            }
+                            break;
+                        default:
                                 myArea="binding";
                                 log(myName, Constants.VERBOSE, myArea, "length >" + attribute.getText().length() +"<. getText =>" +attribute.getText() +"<.");
                                 log(myName, Constants.VERBOSE, myArea, "Trimmed length >" + attribute.getText().trim().length() +"<. getText Trimmed =>" +attribute.getText().trim() +"<.");
@@ -202,30 +253,50 @@ public class LoadDataFromExcel {
                                     log(myName, Constants.VERBOSE, myArea, "Database type is >" + getDatabaseType() +"<. Using setNString.");
                                     preparedStatement.setNString(bindVariableNo, attribute.getText().trim());
                                 }
+                            break;
                             }
-                        }
+                        
                     }
                     logMessage = "Done.";
-                    log(myName, Constants.DEBUG, myArea, logMessage);
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                } //for all populated columns
+
+                //remaining columns
+                for (int cell = currentRowSize; cell < numberOfColumns; cell++) {
+                    bindVariableNo++;
+                    logMessage = "Setting remaining bind variable# >" + Integer.toString(bindVariableNo) + "< to NULL.";
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    //TODO: Determine datatype
+                    preparedStatement.setNull(bindVariableNo, Types.VARCHAR);
                 }
+                //for all columns not populated
+                
                 logMessage = "All bind variables added. Adding batch...";
-                log(myName, Constants.DEBUG, myArea, logMessage);
+                log(myName, Constants.VERBOSE, myArea, logMessage);
 
                 preparedStatement.addBatch(); 
+                //TODO: enable array inserts by not executing every single record
+                
                 logMessage = "Batch added. Executing batch...";
                 log(myName, Constants.DEBUG, myArea, logMessage);
                 preparedStatement.executeBatch();
-                if (counter == 1000) { // if more than 1000 rows, perform the commit to database
-                    logMessage = "Commit for (another) > " + String.valueOf(counter) + " rows<.";
+                
+                //TODO: Let user determine commit size
+                //TODO: Set default per application in properties file
+                if (commitCounter == commitSize) { // if more than x rows, perform the commit to database
+                    logMessage = "Commit for (another) > " + String.valueOf(commitCounter) + " rows<.";
                     log(myName, Constants.INFO, myArea, logMessage);
                     connection.commit();
                     logMessage = "Commit done.";
-                    log(myName, Constants.DEBUG, myArea, logMessage);
-                    counter = 0;
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    commitCounter =0;
+                    arrayCounter =0;
                 }
             }
-            if (counter > 0) {
-                logMessage = "Commit to insert remaining rows in database > " + String.valueOf(counter) + " rows<.";
+            //TODO: Handle remaining rows in Array Insert
+            
+            if (commitCounter > 0) {
+                logMessage = "Commit to insert remaining rows in database > " + String.valueOf(commitCounter) + " rows<.";
                 log(myName, Constants.INFO, myArea, logMessage);
                 connection.commit();
                 logMessage = "Commit done.";
@@ -288,6 +359,7 @@ public class LoadDataFromExcel {
         String myName = "readParameterFile";
         String myArea = "reading";
         String logMessage = Constants.NO;
+        String result =Constants.NOT_FOUND;
 
         databaseType = GetParameters.GetDatabaseType(databaseName);
         logMessage = "Database type >" + databaseType +"<.";
@@ -316,6 +388,17 @@ public class LoadDataFromExcel {
         password = GetParameters.GetDatabaseUserPWD(databaseName);
         logMessage = "Password for user >" + userId + "< retrieved.";
         log(myName, Constants.INFO, myArea, logMessage);
+
+        //Commit size
+        result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, getAppName(), this.className, Constants.PARAM_COMMIT_SIZE_INSERT);
+        if(Constants.NOT_FOUND.equals(result)) {
+            setCommitSize(Constants.DEFAULT_COMMIT_SIZE_INSERT);
+        }
+        else {
+            setCommitSize(Integer.parseInt(result));
+        }
+        log(myName, Constants.DEBUG, myArea, "Commit size >" + Integer.toString(getCommitSize()) +"<.");
+
     }
     
     public String getDatabaseType() {
@@ -350,7 +433,42 @@ public class LoadDataFromExcel {
 
     }
 
+    /**
+     * @param level to which logging should be set. Must be VERBOSE, DEBUG, INFO, WARNING, ERROR or FATAL. Defaults to INFO.
+     */
+    public void setLogLevel(String level) {
+        String myName = "setLogLevel";
+        String myArea = "determineLevel";
+
+        logLevel = Constants.logLevel.indexOf(level.toUpperCase());
+        if (logLevel < 0) {
+            log(myName, Constants.WARNING, myArea, "Wrong log level >" + level + "< specified. Defaulting to level 3.");
+            logLevel = 3;
+        }
+
+        log(myName, Constants.INFO, myArea,
+            "Log level has been set to >" + level + "< which is level >" + getIntLogLevel() + "<.");
+    }
+
+    /**
+     * @return - the log level
+     */
+    public String getLogLevel() {
+        return Constants.logLevel.get(getIntLogLevel());
+    }
+
+    /**
+     * @return - the log level as Integer data type
+     */
+    public Integer getIntLogLevel() {
+        return logLevel;
+    }
+
     public void log(String name, String level, String area, String logMessage) {
+        if (Constants.logLevel.indexOf(level.toUpperCase()) > getIntLogLevel()) {
+            return;
+        }
+
         if (firstTime) {
             firstTime = false;
             if (context.equals(Constants.DEFAULT)) {
@@ -384,4 +502,31 @@ public class LoadDataFromExcel {
         return errorCode;
     }
 
+    private void setPreviousCellFormat(int bindVariableNo, String cellFormat) {
+        previousCellFormatList.put(bindVariableNo, cellFormat);
+    }
+
+    private String getPreviousCellFormat(int bindVariableNo) {
+        if(previousCellFormatList.containsKey(bindVariableNo)) {
+            return previousCellFormatList.get(bindVariableNo);
+        } else {
+            return Constants.EXCEL_CELLFORMAT_UNKNOWN;
+        }
+    }
+
+    public void setCommitSize(int i) {
+        commitSize=i;
+    }
+
+    private int getCommitSize() {
+        return commitSize;
+    }
+
+    private void setAppName(String appName) {
+        this.appName=appName;
+    }
+
+    private String getAppName() {
+        return appName;
+    }
 }
