@@ -2,7 +2,7 @@
  * This purpose of this fixture is to store all the generic constants centrally.
  * @author Edward Crain, Jac. Beekers
  * @version 21 November 2015
-
+ * @version 20170908.0 - new parameter for LoadDataFromExcel
  */
 package nl.consag.supporting;
 
@@ -447,5 +447,19 @@ public class Constants {
 
     public static final int JOB_STEP_IDQ_OBJECTTYPE_COLNR=3;
     
+    public static final String EXCEL_CELLFORMAT_UNKNOWN ="UNKNOWN";
+    public static final String EXCEL_CELLFORMAT_NUMERIC ="NUMERIC";
+    public static final String EXCEL_CELLFORMAT_DATE ="DATE";
+    public static final String EXCEL_CELLFORMAT_STRING ="STRING";
+ 
+    //Parameterized commit and array sizes
+    public static final String PARAM_COMMIT_SIZE_INSERT="CommitSizeInsert";
+    public static final int DEFAULT_COMMIT_SIZE_INSERT=1000;
+    public static final String PARAM_COMMIT_SIZE_UPDATE="CommitSizeUpdate";
+    public static final int DEFAULT_COMMIT_SIZE_UPDATE=1000;
+    public static final String PARAM_ARRAY_SIZE_INSERT="ArraySizeInsert";
+    public static final int DEFAULT_ARRAY_SIZE_INSERT=100;
+    public static final String PARAM_ARRAY_SIZE_UPDATE="ArraySizeUpdate";
+    public static final int DEFAULT_ARRAY_SIZE_UPDATE=100;
     
 }
