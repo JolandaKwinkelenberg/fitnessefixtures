@@ -65,6 +65,7 @@ public class LoadDataFromExcel {
     private HashMap<Integer,String> previousCellFormatList =new HashMap<Integer,String>();
     
     private String appName=Constants.UNKNOWN;
+    private boolean specificCommitSet=false;
 
     public LoadDataFromExcel(String pContext) {
         java.util.Date started = new java.util.Date();
@@ -138,17 +139,18 @@ public class LoadDataFromExcel {
     }
 
     public String result() {
-        //Function submit the truncate SQL statement
-        String myName = "insertQuery-result";
+        String myName = "result";
         String myArea = "init";
         String logMessage = Constants.NOT_INITIALIZED;
         String rc = Constants.OK;
         Connection connection = null;
-        PreparedStatement preparedStatement = null;
+//        PreparedStatement preparedStatement = null;
         String insertTableSQL;
         int commitCounter =0;
         int arrayCounter =0;
         int rowCounter =0;
+        int errorCounter =0;
+        returnMessage = Constants.OK;
 
         myArea = "read Parameter";
         readParameterFile();
@@ -178,14 +180,17 @@ public class LoadDataFromExcel {
             logMessage = "SQL >" + insertTableSQL + "<.";
             log(myName, Constants.DEBUG, myArea, logMessage);
 
+            PreparedStatement preparedStatement = connection.prepareStatement(insertTableSQL);
+//            preparedStatement.clearBatch();
+
             for (int row = 1; row < tableExcelFile.size(); row++) {
+                myArea="Processing row";
                 commitCounter++;
                 arrayCounter++;
                 rowCounter++;
-                //TODO: Prepare only once
-                logMessage = "prepare statement cell no >" + String.valueOf(row) + "<.";
+                logMessage = "preparing statement for cell no >" + String.valueOf(row) + "<.";
                 log(myName, Constants.VERBOSE, myArea, logMessage);
-                preparedStatement = connection.prepareStatement(insertTableSQL);
+                
                 logMessage = "prepared.";
                 log(myName, Constants.VERBOSE, myArea, logMessage);
                 int bindVariableNo = 0;
@@ -271,18 +276,38 @@ public class LoadDataFromExcel {
                 }
                 //for all columns not populated
                 
-                logMessage = "All bind variables added. Adding batch...";
-                log(myName, Constants.VERBOSE, myArea, logMessage);
-
-                preparedStatement.addBatch(); 
-                //TODO: enable array inserts by not executing every single record
+                try {
+                    myArea="AddingBatch";
+                    logMessage = "All bind variables added. Adding batch...";
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    preparedStatement.addBatch(); 
+                    //TODO: enable array inserts by not executing every single record
                 
-                logMessage = "Batch added. Executing batch...";
-                log(myName, Constants.DEBUG, myArea, logMessage);
-                preparedStatement.executeBatch();
+                    myArea="ExecutingBatch";
+                    logMessage = "Batch added. Executing batch...";
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    preparedStatement.executeBatch();
+                    myArea="ClearingBatch";
+                    logMessage = "Batch executed. Clearing batch...";
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    preparedStatement.clearBatch();
+                    logMessage = "Batch cleared."; // Close preparedStatement...";
+                    log(myName, Constants.VERBOSE, myArea, logMessage);
+//                    myArea="ClosingStatement";
+//                    preparedStatement.close();
+//                    logMessage = "preparedStatement closed.";
+//                    log(myName, Constants.DEBUG, myArea, logMessage);
+                }
+                    catch (SQLException e) {
+                            myArea = "Exception handling for " +myArea;
+                            errorCounter++;
+                            logMessage = "SQLException for row >" + Integer.toString(rowCounter) + "< at add/executeBatch. Error=>" + e.toString() + "<. ErrorCounter >" +Integer.toString(errorCounter) +"<.";
+                            log(myName, Constants.ERROR, myArea, logMessage);
+                            returnMessage = logMessage;
+                            setErrorMessage(Constants.ERROR, logMessage);
+                        }
                 
-                //TODO: Let user determine commit size
-                //TODO: Set default per application in properties file
+                myArea="CommitCheck";
                 if (commitCounter == commitSize) { // if more than x rows, perform the commit to database
                     logMessage = "Commit for (another) > " + String.valueOf(commitCounter) + " rows<.";
                     log(myName, Constants.INFO, myArea, logMessage);
@@ -295,6 +320,7 @@ public class LoadDataFromExcel {
             }
             //TODO: Handle remaining rows in Array Insert
             
+            myArea="Remainder";
             if (commitCounter > 0) {
                 logMessage = "Commit to insert remaining rows in database > " + String.valueOf(commitCounter) + " rows<.";
                 log(myName, Constants.INFO, myArea, logMessage);
@@ -304,14 +330,16 @@ public class LoadDataFromExcel {
 
             }
             connection.close();
-            returnMessage = Constants.OK;
+//            returnMessage = Constants.OK;
         } catch (SQLException e) {
             myArea = "Exception handling";
-            logMessage = "SQLException processing data >" + e.toString() + "<.";
+            errorCounter++;
+            logMessage = "SQLException processing data for row >" + Integer.toString(rowCounter) +"<. Error=>" + e.toString() + "<.";
             log(myName, Constants.ERROR, myArea, logMessage);
-            returnMessage = logMessage;
+            returnMessage = logMessage + " Error counter >" + Integer.toString(errorCounter);
             setErrorMessage(Constants.ERROR, logMessage);
         }
+        myArea="Conclusion";
         logMessage = "Message returning to FitNesse > " + returnMessage + "<.";
         log(myName, Constants.INFO, myArea, logMessage);
         return returnMessage;
@@ -514,14 +542,32 @@ public class LoadDataFromExcel {
         }
     }
 
-    public void setCommitSize(int i) {
-        commitSize=i;
+    //for FitNesse
+    public void setCommitSize(String commitSize) {
+        setCommitSize(Integer.parseInt(commitSize));
+        specificCommitSet=true;
+    }
+    
+    private void setCommitSize(int i) {
+        String myName="setCommitSize";
+        String myArea="checkTestPageSetCommit";
+        
+        if(specificCommitSet) {
+            log(myName, Constants.INFO, myArea, "Test page has commit set to >" + Integer.toString(getCommitSize()) +"<. Ignoring property file settings.");
+        } else {
+            commitSize=i;
+        }
     }
 
     private int getCommitSize() {
         return commitSize;
     }
 
+    //for FitNesse
+    public void setApplication(String appName) {
+        setAppName(appName);
+    }
+    
     private void setAppName(String appName) {
         this.appName=appName;
     }
