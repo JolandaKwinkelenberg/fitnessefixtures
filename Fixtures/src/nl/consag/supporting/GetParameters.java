@@ -6,6 +6,9 @@ import java.util.Properties;
 import nl.consag.supporting.Constants;
 
 public class GetParameters {
+    
+    private static String version = "20170909.0";
+
   private static String curFields[];
   private static String delimiter = Constants.INPUT_FILE_DELIMITER;
 
@@ -226,9 +229,30 @@ public class GetParameters {
     return result;
   }
   
-    /*
-     * read logical to physical directory mapping properties file
-     */
+  //Fixtures may use application specific settings
+    public static String getPropertyVal(String propFile, String appName, String className, String prop) {
+        String result=Constants.NOT_FOUND;
+        result=getPropertyVal(propFile, appName + "." + className + "." + prop);
+        if((Constants.NOT_FOUND.equals(result))) {
+            result=getPropertyVal(propFile, className, prop);
+            if((Constants.NOT_FOUND.equals(result))) {
+                result=getPropertyVal(propFile, prop);
+            }
+        }
+        return result;
+        
+    }
+
+    public static String getPropertyVal(String propFile, String className, String prop) {
+        String result=Constants.NOT_FOUND;
+        result=getPropertyVal(propFile, className + "." + prop);
+        if((Constants.NOT_FOUND.equals(result))) {
+            result=getPropertyVal(propFile, prop);
+         }
+        return result;
+        
+    }
+
     public static String getPropertyVal(String propFile, String prop) {
         String val = Constants.NOT_FOUND;
         setError(Constants.OK, Constants.NOERRORS);
@@ -272,6 +296,10 @@ public class GetParameters {
     }
     public static String getErrorCode() {
         return errCode;
+    }
+
+    public static String getVersion() {
+        return version;
     }
   
 }
