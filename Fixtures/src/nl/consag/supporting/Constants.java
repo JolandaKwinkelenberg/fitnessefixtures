@@ -332,9 +332,12 @@ public class Constants {
     public static final String ERRCODE_INVALID_LOCATION="InvalidLogicalLocation";
     public static final String ERROR_INVALID_LOCATION="An invalid logical location was specified.";
     
-    public static final String IDQ_JOBDIR="jobs/";
-    public static final String PARAM_IDQ_JOBDIR ="IdqJobDir";
+    public static final String PARAM_JOBDIR ="jobDir";
+    public static final String DEFAULT_JOBDIR="jobs/";
     
+    public static final String PARAM_RESULTDIR ="resultDir";
+    public static final String DEFAULT_RESULTDIR="results/";
+
     public static final String JOB_COLUMN_SEPARATOR="|";
     public static final String JOB_DEFINITION = "Table:JobDefinition";
     
@@ -376,6 +379,7 @@ public class Constants {
     
     //Job parameter names. Keep these all lower case and without any spaces!
     public static final String JOB_PARAM_VERSION="version";
+    public static final String JOB_PARAM_ONLYGENERATE="onlygenerate";
     public static final String JOB_PARAM_PERSISTENCE="persistence";
     public static final String JOB_PARAM_MAX_CONCURRENCY="maxconcurrency";
     public static final String JOB_PARAM_MAX_CONCURRENT="maxconcurrent";  //alternative name for maxconcurrency
@@ -390,7 +394,9 @@ public class Constants {
     public static final String JOBSTEP_IDQ_SCORECARD="scorecard";
     public static final String JOBSTEP_IDQ_PROFILE="profile";
     public static final String JOBSTEP_IDQ_WORKFLOW="workflow";
-
+    
+    public static final String DEFAULT_ONLY_GENERATE_JOBFILE=NO;
+        
     public static final List<String> JOBSTEP_IDQ_TYPES = Collections.unmodifiableList(Arrays.asList(
         JOBSTEP_IDQ_MAPPING
         ,JOBSTEP_IDQ_SCORECARD
