@@ -6,21 +6,14 @@
  * @version 20160108.0 : Added result of readWorksheet to log and check on ResultMessage. Removed some copy-paste bugs in log messages.
  * @version 20170908.0 : bugfix for empty excel cells
  * @version 20170909.0 : Made commitsize configurable
+ * @version 20170910.0 : Added onlyCols and exceptCols to not process all Excel columns
  */
 package nl.consag.testautomation.database;
 
 import java.sql.*;
-//import java.sql.Date;
-
 import java.text.DateFormat;
-//import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
 import java.util.*;
-
-//import org.apache.poi.ss.usermodel.Cell;
-//import org.apache.poi.ss.usermodel.DateUtil;
-
 import nl.consag.supporting.Constants;
 import nl.consag.supporting.Logging;
 import nl.consag.testautomation.supporting.Attribute;
@@ -29,11 +22,14 @@ import nl.consag.supporting.GetParameters;
 
 public class LoadDataFromExcel {
 
-    private static String version = "20170909.0";
+    private static String version = "20170910.0";
     private int logLevel = 3;
 
     private String className = "LoadDataFromExcel";
     private String logFileName = Constants.NOT_INITIALIZED;
+    private String logUrl=Constants.LOG_DIR;
+    private String resultFormat =Constants.DEFAULT_RESULT_FORMAT;
+
     private String context = Constants.DEFAULT;
     private String startDate = Constants.NOT_INITIALIZED;
     private boolean firstTime = true;
@@ -67,26 +63,46 @@ public class LoadDataFromExcel {
     private String appName=Constants.UNKNOWN;
     private boolean specificCommitSet=false;
 
-    public LoadDataFromExcel(String pContext) {
+    private String[] onlyCols;
+    private String[] exceptCols;
+    private List<String> onlyColsList = new ArrayList<String>();
+    private List<String> exceptColsList =new ArrayList<String>();
+    private List<Integer> includedCols =new ArrayList<Integer>();
+    
+    int colCounter =0;
+
+    /**
+     * @param context: Determines part of the log file name
+     */
+    public LoadDataFromExcel(String context) {
         java.util.Date started = new java.util.Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         startDate = sdf.format(started);
-        context = pContext;
+        this.context = context;
     }
 
-    public LoadDataFromExcel(String pContext, String logLevel) {
+    /**
+     * @param context: Determines part of the log file name
+     * @param logLevel: set to FATAL, ERROR, WARNING, INFO, DEBUG, VERBOSE
+     */
+    public LoadDataFromExcel(String context, String logLevel) {
         java.util.Date started = new java.util.Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         startDate = sdf.format(started);
-        context = pContext;
+        this.context = context;
         setLogLevel(logLevel);
     }
-    
-    public LoadDataFromExcel(String pContext, String logLevel, String appName) {
+
+    /**
+     * @param context: Determines part of the log file name
+     * @param logLevel: set to FATAL, ERROR, WARNING, INFO, DEBUG, VERBOSE
+     * @param appName: use if you want to set application level properties
+     */
+    public LoadDataFromExcel(String context, String logLevel, String appName) {
         java.util.Date started = new java.util.Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         startDate = sdf.format(started);
-        context = pContext;
+        this.context = context;
         setLogLevel(logLevel);
         setAppName(appName);
     }
@@ -98,6 +114,9 @@ public class LoadDataFromExcel {
         context = className;
     }
 
+    /**
+     * @param databasename: Must match an entry in database.properties
+     */
     public void setDatabaseName(String databasename) {
         String myName = "setDatabaseName";
         String myArea = "init";
@@ -108,6 +127,9 @@ public class LoadDataFromExcel {
         log(myName, Constants.DEBUG, myArea, logMessage);
     }
 
+    /**
+     * @param tableName: database tabel to load the data into
+     */
     public void setTableName(String tableName) {
         String myName = "setTableName";
         String myArea = "init";
@@ -118,6 +140,9 @@ public class LoadDataFromExcel {
         log(myName, Constants.DEBUG, myArea, logMessage);
     }
 
+    /**
+     * @param inputFile: logicalLocation subdir/filename. logicalLocation must exist in directory.properties
+     */
     public void setInputFile(String inputFile) {
         String myName = "setInputFile";
         String myArea = "init";
@@ -128,6 +153,9 @@ public class LoadDataFromExcel {
         log(myName, Constants.DEBUG, myArea, logMessage);
     }
 
+    /**
+     * @param worksheetName: Excel worksheet name containing the data to be loaded
+     */
     public void setWorksheetName(String worksheetName) {
         String myName = "setWorksheetName";
         String myArea = "init";
@@ -138,6 +166,9 @@ public class LoadDataFromExcel {
         log(myName, Constants.DEBUG, myArea, logMessage);
     }
 
+    /**
+     * @return - OK = No errors encountered. Otherwise most of the time the SQL error message returned by the database.
+     */
     public String result() {
         String myName = "result";
         String myArea = "init";
@@ -164,8 +195,12 @@ public class LoadDataFromExcel {
             return Constants.ERROR;
         }
         getDatabaseColumnNames();
+        if(!Constants.OK.equals(getErrorCode())) {
+            log(myName, Constants.ERROR, myArea, getErrorMessage());
+            return Constants.ERROR;
+        }
 
-        logMessage = "Method: InsertQuery.";
+        logMessage = "Number of columns to be included in insertQuery: >" + Integer.toString(colCounter) +"<.";
         log(myName, Constants.DEBUG, myArea, logMessage);
 
         try {
@@ -184,10 +219,10 @@ public class LoadDataFromExcel {
 //            preparedStatement.clearBatch();
 
             for (int row = 1; row < tableExcelFile.size(); row++) {
-                myArea="Processing row";
                 commitCounter++;
                 arrayCounter++;
                 rowCounter++;
+                myArea="Processing row#" + Integer.toString(rowCounter);
                 logMessage = "preparing statement for cell no >" + String.valueOf(row) + "<.";
                 log(myName, Constants.VERBOSE, myArea, logMessage);
                 
@@ -196,9 +231,12 @@ public class LoadDataFromExcel {
                 int bindVariableNo = 0;
                 int currentRowSize = tableExcelFile.get(row).size();
                 logMessage = "Row #" + Integer.toString(rowCounter) + " has >"  + Integer.toString(currentRowSize) + "< column(s) populated.";
-                log(myName, Constants.DEBUG, myArea, logMessage);
+                log(myName, Constants.VERBOSE, myArea, logMessage);
 //                for (int cell = 0; cell < numberOfColumns; cell++) {
                 for (int cell = 0; cell < currentRowSize; cell++) {
+                    if(!includedCols.contains(bindVariableNo)) {
+                        continue;
+                    }
                     bindVariableNo++;
                     logMessage = "Binding variable# >" + Integer.toString(bindVariableNo) + "<.";
                     log(myName, Constants.VERBOSE, myArea, logMessage);
@@ -221,7 +259,7 @@ public class LoadDataFromExcel {
                         setPreviousCellFormat(bindVariableNo,attribute.getFormat());
                     }
                     if (Constants.SIEBEL_NULL_VALUE.equals(attribute.getText())) {
-                        log(myName, Constants.DEBUG, myArea, "Null string detected. Setting columns to NULL.");
+                        log(myName, Constants.DEBUG, myArea, "Null string detected in bind col >" + Integer.toString(bindVariableNo) +"<. Setting column to NULL.");
                         switch (attribute.getFormat()) {
                         case Constants.EXCEL_CELLFORMAT_NUMERIC:
                             preparedStatement.setNull(bindVariableNo, Types.DOUBLE);
@@ -345,44 +383,56 @@ public class LoadDataFromExcel {
         return returnMessage;
     }
 
-    public void getDatabaseColumnNames() {
+    private void getDatabaseColumnNames() {
         //Function to read the names of the database columns	
         Attribute attribute = new Attribute();
         DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
         for (int i = 0; i < tableExcelFile.get(0).size(); i++) { // next column names
             attribute = tableExcelFile.get(0).get(i); //first column name
-            if (i == 0) {
-                if (attribute.getFormat() == "NUMERIC") {
-                    concatenatedDatabaseColumnNames = String.valueOf(attribute.getNumber());
-                } else {
-                    if (attribute.getFormat() == "DATE") {
-                        String text = df.format(attribute.getDate());
-                        concatenatedDatabaseColumnNames = text;
-                    } else { //String, boolean and others
-                        concatenatedDatabaseColumnNames = attribute.getText();
+            //Check whether column name should be excluded or not
+            String checkInclusion=determineColumnInclusion(attribute.getText(), i);
+            switch(checkInclusion) {
+            case Constants.YES:
+                if (colCounter == 0) {
+                    if (attribute.getFormat() == "NUMERIC") {
+                        concatenatedDatabaseColumnNames = String.valueOf(attribute.getNumber());
+                    } else {
+                        if (attribute.getFormat() == "DATE") {
+                            String text = df.format(attribute.getDate());
+                            concatenatedDatabaseColumnNames = text;
+                        } else { //String, boolean and others
+                            concatenatedDatabaseColumnNames = attribute.getText();
+                        }
                     }
-                }
-                concatenatedBindVariables = "?";
-                numberOfColumns = 1;
-            } else {
-                if (attribute.getFormat() == "NUMERIC") {
-                    concatenatedDatabaseColumnNames =
-                        concatenatedDatabaseColumnNames + "," + String.valueOf(attribute.getNumber());
-                } else {
-                    if (attribute.getFormat() == "DATE") {
-                        String text = df.format(attribute.getDate());
-                        concatenatedDatabaseColumnNames = concatenatedDatabaseColumnNames + "," + text;
-                    } else { //String, boolean and others
-                        concatenatedDatabaseColumnNames = concatenatedDatabaseColumnNames + "," + attribute.getText();
+                    concatenatedBindVariables = "?";
+                    numberOfColumns = 1;
+                    } else {
+                        if (attribute.getFormat() == "NUMERIC") {
+                            concatenatedDatabaseColumnNames =
+                            concatenatedDatabaseColumnNames + "," + String.valueOf(attribute.getNumber());
+                        } else {
+                            if (attribute.getFormat() == "DATE") {
+                                String text = df.format(attribute.getDate());
+                                concatenatedDatabaseColumnNames = concatenatedDatabaseColumnNames + "," + text;
+                            } else { //String, boolean and others
+                                concatenatedDatabaseColumnNames = concatenatedDatabaseColumnNames + "," + attribute.getText();
+                            }
+                        }
+                        concatenatedBindVariables = concatenatedBindVariables + ",?";
+                        numberOfColumns++;
                     }
-                }
-                concatenatedBindVariables = concatenatedBindVariables + ",?";
-                numberOfColumns++;
+                colCounter++;
+                break;
+            case Constants.NO:
+                break;
+            default:
+                setErrorMessage(Constants.ERROR, "Column inclusion could not be determined.");
+                break;
             }
         }
     }
 
-    public void readParameterFile() {
+    private void readParameterFile() {
         //Function to read the parameters in a parameter file
         String myName = "readParameterFile";
         String myArea = "reading";
@@ -417,6 +467,18 @@ public class LoadDataFromExcel {
         logMessage = "Password for user >" + userId + "< retrieved.";
         log(myName, Constants.INFO, myArea, logMessage);
 
+        logUrl = GetParameters.GetLogUrl();
+        logMessage = "logURL >" + logUrl +"<.";   log(myName, Constants.DEBUG, myArea, logMessage);
+
+        result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RESULT_FORMAT);
+        if(Constants.NOT_FOUND.equals(result)) {
+            setResultFormat(Constants.DEFAULT_RESULT_FORMAT);
+        }
+        else {
+            setResultFormat(result);
+        }
+        log(myName, Constants.DEBUG, myArea, "resultFormat >" + getResultFormat() +"<.");
+
         //Commit size
         result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, getAppName(), this.className, Constants.PARAM_COMMIT_SIZE_INSERT);
         if(Constants.NOT_FOUND.equals(result)) {
@@ -433,7 +495,7 @@ public class LoadDataFromExcel {
         return databaseType;
     }
 
-    public String readExcelFile() {
+    private String readExcelFile() {
         //Function to read the excel file
         String myName = "readExcelFile";
         String myArea = "reading";
@@ -492,7 +554,7 @@ public class LoadDataFromExcel {
         return logLevel;
     }
 
-    public void log(String name, String level, String area, String logMessage) {
+    private void log(String name, String level, String area, String logMessage) {
         if (Constants.logLevel.indexOf(level.toUpperCase()) > getIntLogLevel()) {
             return;
         }
@@ -509,8 +571,14 @@ public class LoadDataFromExcel {
         Logging.LogEntry(logFileName, name, level, area, logMessage);
     }
 
+    /**
+     * @return Log file name. If the LogUrl starts with http, a hyperlink will be created
+     */
     public String getLogFilename() {
-        return logFileName;
+        if(logUrl.startsWith("http"))
+            return "<a href=\"" +logUrl+logFileName +".log\" target=\"_blank\">" + logFileName + "</a>";
+        else
+            return logUrl+logFileName + ".log";
     }
 
     public static String getVersion() {
@@ -522,10 +590,16 @@ public class LoadDataFromExcel {
         errorMessage = logMessage;
     }
 
+    /**
+     * @return - The error message
+     */
     public String getErrorMessage() {
         return errorMessage;
     }
 
+    /**
+     * @return - The result code, eg. OK, ERROR, FATAL
+     */
     public String getErrorCode() {
         return errorCode;
     }
@@ -542,7 +616,9 @@ public class LoadDataFromExcel {
         }
     }
 
-    //for FitNesse
+    /**
+     * @param commitSize: Sets the commit size for this test. Overrules any commit size settings in properties file.
+     */
     public void setCommitSize(String commitSize) {
         setCommitSize(Integer.parseInt(commitSize));
         specificCommitSet=true;
@@ -563,7 +639,9 @@ public class LoadDataFromExcel {
         return commitSize;
     }
 
-    //for FitNesse
+    /**
+     * @param appName: Sets the application name. Use this to set application level properties in fixture.properties
+     */
     public void setApplication(String appName) {
         setAppName(appName);
     }
@@ -574,5 +652,83 @@ public class LoadDataFromExcel {
 
     private String getAppName() {
         return appName;
+    }
+    
+    public void setResultFormat(String resultFormat) {
+        this.resultFormat = resultFormat;
+    }
+
+    public String getResultFormat() {
+        return resultFormat;
+    }
+
+    public void setOnlyExcelColumns(String onlyCols) {
+        this.onlyCols=onlyCols.split(",");
+        this.onlyColsList =Arrays.asList(this.onlyCols);
+    }
+    
+    public void setExceptExcelColumns(String exceptCols) {
+        this.exceptCols=exceptCols.split(",");
+        this.exceptColsList =Arrays.asList(this.exceptCols);
+    }
+
+    private String determineColumnInclusion(String colName, int position) {
+        String myName="determineColumnInclusion";
+        String myArea="check inclusion/exclusion";
+        boolean includeCol=true;
+        boolean excludeCol=false;
+        String outcome=Constants.YES;
+        
+        // if colName is in inclusionList (if available)
+        if(onlyColsList.size() >0) {
+            if(onlyColsList.contains(colName)) {
+                //got it
+                includeCol=true;
+                log(myName, Constants.VERBOSE, myArea, "onlyCols: Column >" +colName + "< should be included.");
+            } else {
+                //not in the list
+                includeCol=false;
+                log(myName, Constants.VERBOSE, myArea, "onlyCols: Column >" +colName + "< should be excluded.");
+            }
+        } else {
+            log(myName, Constants.INFO, myArea, "No inclusion list provided.");
+        }
+
+        if(exceptColsList.size() >0) {
+            if(exceptColsList.contains(colName)) {
+                //don't include it
+                excludeCol=true;
+                log(myName, Constants.VERBOSE, myArea, "exceptCols: Column >" +colName + "< should be excluded.");
+            } else {
+                //fine
+                excludeCol=false;
+                log(myName, Constants.VERBOSE, myArea, "exceptCols: Column >" +colName + "< should be included.");
+            }
+        } else {
+            log(myName, Constants.INFO, myArea, "No exception list provided.");
+        }
+
+    //determine outcome
+        if(includeCol && ! excludeCol) {
+            //both say column should be included
+            outcome=Constants.YES;
+            includedCols.add(position);
+        }
+        if(! includeCol &&  excludeCol) {
+            //both say column should be excluded
+            outcome=Constants.NO;
+        }
+        if(includeCol && excludeCol) {
+            //Conflict
+            outcome=Constants.ERROR;
+            log(myName, Constants.ERROR, myArea, "onlyCols would include column >" + colName +"<, but exceptCols excludes it. Please make up your mind :)");
+        }
+        if(!includeCol && !excludeCol) {
+            //If the column is not on the include list, it should not be included, even though it might not be on the exclude list
+            outcome=Constants.NO;
+            log(myName, Constants.INFO, myArea, "onlyCols excludes column >" + colName +"<. Column is not on the exceptCols list. Column will be excluded.");
+        }
+        
+        return outcome;
     }
 }
