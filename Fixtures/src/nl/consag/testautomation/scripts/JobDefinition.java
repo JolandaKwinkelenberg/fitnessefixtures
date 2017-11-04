@@ -5,36 +5,27 @@
  * @version 20170113.0 - implemented IDQ Mapping
  * @version 20170225.0 - scripts can be configured in fixture.properties
  * @version 20170325.0 - support for new step type wait
+ * @version 20170909.0 - OnlyGenerate, so fixture does not execute generated job file. Code cleanup
  */ 
+
 package nl.consag.testautomation.scripts;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 
 import java.io.FileWriter;
-import java.io.IOException;
 
-import java.sql.*;
 import java.text.*;
 import java.util.*;
 
 import java.util.stream.Collectors;
 
-import nl.consag.testautomation.linux.CheckFile;
-
 import nl.consag.supporting.Constants;
 import nl.consag.supporting.Logging;
 import nl.consag.supporting.GetParameters;
-import nl.consag.testautomation.informatica.DISObject;
-import nl.consag.testautomation.informatica.DISObject.DISObjectStopTest;
-import nl.consag.testautomation.informatica.Mapping;
-import nl.consag.testautomation.informatica.Profile;
 import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 public class JobDefinition {
-    private static String version ="20170325.0";
+    private static String version ="20170909.0";
 
     private String className = "JobDefinition";
     private String logFileName = Constants.NOT_INITIALIZED;
@@ -69,7 +60,8 @@ public class JobDefinition {
     
     private String logicalScriptDirLocation =Constants.LOGICAL_SCRIPTDIR_IDQ;
     private String logicalLocationIdqSubDir = Constants.LOGICAL_LOCATION_IDQSUBDIR;
-    private String jobDir =Constants.IDQ_JOBDIR;
+    private String jobDir =Constants.DEFAULT_JOBDIR;
+    private String resultDir =Constants.DEFAULT_RESULTDIR;
     
     private boolean appendToFile=false;
     
@@ -99,6 +91,8 @@ public class JobDefinition {
     
     // IDQ Jobs
     private String stepIdqObjectType=Constants.NOT_PROVIDED;
+    
+    private String onlyGenerate=Constants.DEFAULT_ONLY_GENERATE_JOBFILE;
 
     public JobDefinition() {
 	//Constructors
@@ -175,31 +169,30 @@ public List doTable(List<List<String>> inputTable) {
         addRowToReturnTable(getResultRow());
     }
 
-    readParameterFile();
+    if(Constants.NO.equalsIgnoreCase(getOnlyGenerate())) {
+        readParameterFile();
     
-    /* For now, the fixture does not execute the steps itself, but relies on the IDQRunJob.sh script
-     * Call: IDQRunJob.sh -jobfile <thejobfile>
-     * 
-     * 
-     */
-
-    ExecuteScript script = new ExecuteScript(getJobScript(), "JobDefinition");
-    script.setLogLevel(getLogLevel());
-    script.setScriptLocation(getLogicalScriptDirLocation() + " " + getLogicalLocationIdqSubDir() );
-    script.setLogLevel(Constants.DEBUG);
-    script.setCaptureErrors(Constants.YES);
-    script.setCaptureOutput(Constants.YES);
-    script.addParameter("-log2parent");
-    script.addParameter(Constants.YES);
-    script.addParameter("-jobfile");
-    script.addParameter(getJobDir() + getApplicationName() + '-' + getJobName() +".job");
-    List<String> resultRow = new ArrayList<String>();
-    String rc=Constants.UNKNOWN;
-    String errMsg=Constants.UNKNOWN;
+        ExecuteScript script = new ExecuteScript(getJobScript(), "JobDefinition");
+        script.setLogLevel(getLogLevel());
+        script.setScriptLocation(getLogicalScriptDirLocation() + " " + getLogicalLocationIdqSubDir() );
+        script.setLogLevel(Constants.DEBUG);
+        script.setCaptureErrors(Constants.YES);
+        script.setCaptureOutput(Constants.YES);
+        script.setResultFileName(getJobName()+".result");
+        script.setResultLocation(Constants.LOGICAL_BASE_DIR + " results");
+        script.addParameter("-log2parent");
+        script.addParameter(Constants.YES);
+        script.addParameter("-jobfile");
+        script.addParameter(getJobDir() + getApplicationName() + '-' + getJobName() +".job");
+        script.addParameter("-resultfile");
+        script.addParameter(getResultDir() + getJobName() +".result");
+        List<String> resultRow = new ArrayList<String>();
+        String rc=Constants.UNKNOWN;
+        String errMsg=Constants.UNKNOWN;
 
         try {
             rc = script.runScriptReturnCode();
-//            errMsg = script.getErrorMessage();
+            errMsg = script.getResultValue("result");
             if("0".equals(rc)) {
                 log(myName, Constants.INFO, "Script result","Script " + getJobScript() + "  returned >0<. Script log file is >" + script.getLogFilename() +"<.");
                 setError(Constants.OK, Constants.NOERRORS);
@@ -217,21 +210,22 @@ public List doTable(List<List<String>> inputTable) {
             resultRow.add(Constants.FITNESSE_PREFIX_FAIL + "rc=>" +rc +"< - errMsg=>" +errMsg+"<. Exception =>" + e.toString() +"<.");
         }
 
-    addRowToReturnTable (resultRow);   
-
+        addRowToReturnTable (resultRow);   
+        //add a row for the link to the script log file
+        List<String> logFileRow = new ArrayList<String>();
+        logFileRow = new ArrayList<String>();
+        logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +"script log file");
+        logFileRow.add(Constants.FITNESSE_PREFIX_REPORT + script.getLogFilename());
+        addRowToReturnTable (logFileRow);   
+    }
+    
     List<String> logFileRow = new ArrayList<String>();
     logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +"log file");
     logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +getLogFilename());
     addRowToReturnTable (logFileRow);	
-    
-    //add a row for the link to the script log file
-    logFileRow = new ArrayList<String>();
-    logFileRow.add(Constants.FITNESSE_PREFIX_REPORT +"script log file");
-    logFileRow.add(Constants.FITNESSE_PREFIX_REPORT + script.getLogFilename());
-    addRowToReturnTable (logFileRow);   
 
     return getReturnTable();
-    //return inputTable;
+
 }
 
 private List<String> splitRow(String src, String delimiter) {
@@ -321,6 +315,9 @@ private String processJobRow(List<String> row) {
     List<String> returnRow = new ArrayList<String>();  
     returnRow=row.stream().skip(0).collect(Collectors.toList());
 
+    List<String> outputRow = new ArrayList<String>();  
+    outputRow=row.stream().skip(0).collect(Collectors.toList());
+
     /*Format of the application row:
      * 
      * |IDQ|IDQ Example Job|Version=20161113.0|Persistence=Yes|Max Concurrent=2|IDQConfig=/rabo/sserole/tws/config/idq.cfg|PWCConfig=/rabo/sserole/tws/config/pwc_idq.cfg|
@@ -347,6 +344,10 @@ private String processJobRow(List<String> row) {
         if(splitted.length <2) continue;
         
         switch(splitted[0].toLowerCase().replaceAll(" ", "")) {
+        case Constants.JOB_PARAM_ONLYGENERATE:
+            setOnlyGenerate(splitted[1]);
+            outputRow.remove(i);
+            break;
         case Constants.JOB_PARAM_VERSION:
             setJobVersion(splitted[1]);
             break;
@@ -386,7 +387,7 @@ private String processJobRow(List<String> row) {
     List<String> header = new ArrayList<String>();
     header.add(Constants.JOB_DEFINITION);
     writeToJobFile(header);
-    writeToJobFile(row);
+    writeToJobFile(outputRow);
 
     return Constants.OK;
 
@@ -474,29 +475,7 @@ private String processRow(List<String> row) {
         
         setResult(Constants.UNKNOWN);
             
-        //Ok. The step has a valid step type configured, so it must have at least 3 fields (checked by isValidStepType)
-/*        switch(row.get(2).toLowerCase().replaceAll(" ", "")) {
-        case Constants.JOB_STEPTYPE_IDQ:
-            processIDQRequest(row);
-            break;
-        case Constants.JOB_STEPTYPE_PWC:
-            break;
-        case Constants.JOB_STEPTYPE_DAC:
-            break;
-        case Constants.JOB_STEPTYPE_ORACLE:
-            break;
-        case Constants.JOB_STEPTYPE_DB2:
-            break;
-        case Constants.JOB_STEPTYPE_SCRIPT:
-            break;
-        default:
-            //impossible: Already filtered out by isValidStepType and isImplementedStepType
-            logMessage="INTERNAL ERROR: Step type has been determined as valid but falls through process switch. >" + row.get(2) +"< converted to >"
-                       + row.get(2).toLowerCase().replaceAll(" ","") +"<."; 
-            log(myName, Constants.DEBUG, myArea, logMessage);      
-            break;
-        }
-  */  } else {
+    } else {
         returnRow=formatRow(returnRow,Constants.JOB_STEPTYPE_COLNR,Constants.FITNESSE_PREFIX_IGNORE);
         returnRow=formatRow(returnRow,Constants.FITNESSE_PREFIX_REPORT);
         returnRow.add(0,Constants.JOB_STEPTYPE_NOT_IMPLEMENTED);
@@ -530,200 +509,6 @@ private String processRow(List<String> row) {
     writeToJobFile(row);
     
     return getResult();
-}
-
-private String processIDQRequest(List<String> row) {
-    String myName="processIDQRequest";
-    String myArea="init";
-    String logMessage=Constants.NOT_PROVIDED;
-    
-    logMessage="Processing step number >" + getStepNumber() +"< named >" + getStepName() +"< of type >" + getStepType() +"<.";
-    log(myName, Constants.INFO, myArea, logMessage);
-    if(row.size() <= 3) {
-        logMessage="IDQ Request has insufficient parameters. Missing object type (mapping, profile, worfklow) amongst others.";
-        log(myName, Constants.ERROR, myArea, logMessage);
-        setError(Constants.ERROR, logMessage);
-        return Constants.ERROR;
-    }
-    
-    setStepIdqObjectType(row.get(Constants.JOB_STEP_IDQ_OBJECTTYPE_COLNR));
-    logMessage="IDQ Request is for the object type >" +getStepIdqObjectType() +"<.";
-    log(myName, Constants.INFO, myArea, logMessage);
-
-    switch(getStepIdqObjectType()) {
-    case Constants.JOBSTEP_IDQ_MAPPING:
-    case Constants.JOBSTEP_IDQ_WORKFLOW:
-        processDISObject(row);
-        break;
-    case Constants.JOBSTEP_IDQ_PROFILE:
-    case Constants.JOBSTEP_IDQ_SCORECARD:
-        processProfileObject();
-        break;
-    default:
-        logMessage="Invalid object type >" +getStepIdqObjectType() +"< specified. Must be " + Constants.JOBSTEP_IDQ_MAPPING + ", " + Constants.JOBSTEP_IDQ_PROFILE
-            +", " + Constants.JOBSTEP_IDQ_SCORECARD + " or " + Constants.JOBSTEP_IDQ_WORKFLOW;
-        log(myName, Constants.ERROR, myArea, logMessage);
-        setError(Constants.ERROR, logMessage);
-        break;
-    }
-                             
-    return getResult();
-    
-}
-
-private String determineIDQDISObjectSettings(List<String> row) {
-    String myName="determineIDQDISObjectSettings";
-    String myArea="init";
-    String logMessage=Constants.NOT_INITIALIZED;
-    
-    List<String> returnRow = new ArrayList<String>();  
-    returnRow=row.stream().skip(0).collect(Collectors.toList());
-
-    /*Format of the IDQ DISObject row:
-     * 
-     * |03  |Run OBA mapping        |Run IDQ           |mapping        |project=OBA_4_Mappings         |application=Appl_run_map_OBA_Adressen     |mapping=map_OBA_select_adresses_based_on_rules|result=OK        |On Error=STOP    |Wait=No |JobMustWaitOnStepCompletion=Yes|
-     * |Step Number|Step Name |Step Type|IDQ ObjectType|Param1=...|Param2=...| etc.
-     */
-    
-    if(row.size() <4) {
-        logMessage="Insufficient arguments for IDQ DIS Object >" +row.size() +"<.";
-        log(myName, Constants.ERROR, myArea, logMessage);
-        setError(Constants.ERROR, logMessage);
-        return Constants.ERROR;
-    }
-    
-    for(int i=4; i < returnRow.size(); i++) {
-        String[] splitted =returnRow.get(i).split(Constants.PROPERTY_DELIMITER, 2);
-        if(splitted.length <2) {
-            logMessage="Invalid argument specification >" +returnRow.get(i) +"<. Could not split it using delimiter >" +Constants.PROPERTY_DELIMITER +"<.";
-            log(myName, Constants.WARNING, myArea, logMessage);
-            setError(Constants.WARNING, logMessage);
-            continue;
-        }
-        
-        switch(splitted[0].toLowerCase().replaceAll(" ", "")) {
-        case Constants.JOBSTEP_PARAM_IDQ_PROJECT:
-            setStepProjectName(splitted[1]);
-            break;
-        case Constants.JOBSTEP_PARAM_IDQ_APPLICATION:
-            setStepApplicationName(splitted[1]);
-            break;
-        case Constants.JOBSTEP_PARAM_IDQ_OBJECT:
-            setStepObjectName(splitted[1]);
-            break;
-        case Constants.JOBSTEP_PARAM_IDQ_MAPPING:
-            setStepMappingName(splitted[1]);
-            setStepObjectName(splitted[1]);
-            break;
-        case Constants.JOBSTEP_PARAM_IDQ_EXPECTEDRESULT:
-            setStepExpectedResult(splitted[1]);
-            break;
-        case Constants.JOBSTEP_PARAM_IDQ_ONERROR:
-            setStepAbortOnError(splitted[1]);
-            break;
-        case Constants.JOBSTEP_PARAM_IDQ_ONERRORACTION:
-            setStepOnErrorAction(splitted[1]);
-            break;
-        case Constants.JOBSTEP_PARAM_IDQ_WAIT:
-            setStepWait(splitted[1]);
-            break;
-        case Constants.JOBSTEP_PARAM_IDQ_JOBMUSTWAITONSTEPCOMPLETION:
-            setStepJobMustWaitOnStepCompletion(splitted[1]);
-            break;
-        default:
-            break;
-        }
-    }
-    
-    return Constants.OK;
-    
-}
-
-private void outputIDQStepDISObjectSettings() {
-    String logMessage = Constants.NOT_INITIALIZED;
-    String myName="outputIDQStepDISObjectSettings";
-    String myArea="processing";
-                
-    logMessage="Step settings"; log(myName, Constants.INFO, myArea, logMessage);
-    logMessage="=================================="; log(myName, Constants.INFO, myArea, logMessage);
-    logMessage="Step AbortOnError ...............>" + getStepAbortOnError() + "<."; log(myName, Constants.INFO, myArea, logMessage);
-    logMessage="Step OnErrorAction ..............>" + getStepOnErrorAction() + "<."; log(myName, Constants.INFO, myArea, logMessage);
-    logMessage="Step IDQ Application Name .......>" + getStepApplicationName() + "<."; log(myName, Constants.INFO, myArea, logMessage);
-    logMessage="Step IDQ Folder Name ............>" + getStepFolderName() + "<."; log(myName, Constants.INFO, myArea, logMessage);
-    logMessage="Step Log level ..................>" + getLogLevel() + "<."; log(myName, Constants.INFO, myArea, logMessage);
-    logMessage="Step IDQ Object Name ............>" + getStepObjectName() + "<."; log(myName, Constants.INFO, myArea, logMessage);
-    logMessage="Step Project Name ...............>" + getStepProjectName() + "<."; log(myName, Constants.INFO, myArea, logMessage);
-
-    logMessage="=================================="; log(myName, Constants.INFO, myArea, logMessage);
-
-}
-
-private String processDISObject(List<String> row) {
-    /*
-     * Works for mappings and workflows
-     */
-    String myName="processDISObject";
-    String myArea="init";
-    String logMessage=Constants.NOT_INITIALIZED;
-    
-    setError(Constants.OK, Constants.NOERRORS);
-
-    determineIDQDISObjectSettings(row);
-    outputIDQStepDISObjectSettings();
-    
-    try {
-        myArea="Processing";
-        DISObject disObject = new DISObject();
-        String rc=Constants.OK;
-        if(Constants.NOT_PROVIDED.equals(getStepAbortOnError())) {
-            switch(getStepOnErrorAction()) {
-            case Constants.JOBSTEP_PARAM_STOPACTION_STOP:
-                setStepAbortOnError(Constants.YES);
-                break;
-            case Constants.JOBSTEP_PARAM_STOPACTION_CONTINUE:
-                setStepAbortOnError(Constants.NO);
-                break;
-            default:
-                setStepAbortOnError(Constants.NO);  //TODO: get default value from application.properties
-                break;
-            }
-        }
-        disObject.setAbortOnError(getStepAbortOnError());  // Yes or No. TODO: Maybe use getStepAbortAction to conclude the Yes or No
-        disObject.setApplicationName(getStepApplicationName());
-        disObject.setFolderName(getStepFolderName());
-        disObject.setLogLevel(getLogLevel());
-        disObject.setObjectName(getStepObjectName());
-        disObject.setProjectName(getStepProjectName());
-        disObject.setConfigFile(getJobIDQConfig());
-        rc=disObject.runDISObject();
-        setError(disObject.getErrorCode(),disObject.getErrorMessage());
-        logMessage="runDISObject returned >" +rc +"<. Error Message >" + disObject.getErrorMessage() +"<.";
-        log(myName, disObject.getErrorCode(), myArea, logMessage);
-        
-    } catch (DISObjectStopTest e) {
-        logMessage="Error row >" + row.get(0) + "<: " + e.toString();
-        log(myName, Constants.ERROR, myArea, logMessage);
-        setError(Constants.ERROR, logMessage);
-    }
-    return getResult();
-}
-
-private String processProfileObject() {
-    /*
-     * Works for Profile and Scorecards
-     */
-    String myName="processProfileObject";
-    String myArea="init";
-    String logMessage=Constants.NOT_INITIALIZED;
-
-    setError(Constants.WARNING, myName + ": " + Constants.NOT_IMPLEMENTED);
-    logMessage="Profile/Scorecard implementation is incomplete.";
-    log(myName, Constants.ERROR, myArea, logMessage);
-    
-    Profile profile = new Profile();
-    
-    return getResult();
-    
 }
 
 private List<String> formatRow(List<String> theInputRow, String formatToApply) {
@@ -925,15 +710,24 @@ private void readParameterFile(){
 
     //
     //Job directory where to create the job file
-    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_IDQ_JOBDIR);
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, getApplicationName(), this.className, Constants.PARAM_JOBDIR);
     if(Constants.NOT_FOUND.equals(result)) {
-        setJobDir(Constants.IDQ_JOBDIR);
+        setJobDir(Constants.DEFAULT_JOBDIR);
     }
     else {
         setJobDir(result);
     }
     log(myName, Constants.DEBUG, myArea, "Job directory >" + getJobDir() +"<.");
     
+    //Result Directory
+    result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, getApplicationName(), this.className, Constants.PARAM_RESULTDIR);
+    if(Constants.NOT_FOUND.equals(result)) {
+        setResultDir(Constants.DEFAULT_RESULTDIR);
+    }
+    else {
+        setResultDir(result);
+    }
+    log(myName, Constants.DEBUG, myArea, "Result directory >" + getResultDir() +"<.");
 
 
     log(myName, Constants.DEBUG, "end", "End of readParameterFile");
@@ -1283,11 +1077,27 @@ private void writeToJobFile(List<String> row) {
         return jobDir;
     }
 
+    public void setResultDir(String resultDir) {
+        this.resultDir = resultDir;
+    }
+
+    public String getResultDir() {
+        return resultDir;
+    }
+
     public void setLogicalLocationIdqSubDir(String logicalLocationIdqSubDir) {
         this.logicalLocationIdqSubDir = logicalLocationIdqSubDir;
     }
 
     public String getLogicalLocationIdqSubDir() {
         return logicalLocationIdqSubDir;
+    }
+
+    private void setOnlyGenerate(String yesNo) {
+        this.onlyGenerate =yesNo;
+    }
+    
+    private String getOnlyGenerate() {
+        return onlyGenerate;
     }
 }
