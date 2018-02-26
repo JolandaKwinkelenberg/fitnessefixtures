@@ -22,7 +22,7 @@ import nl.consag.supporting.GetParameters;
 
 public class LoadDataFromExcel {
 
-    private static String version = "20170910.0";
+    private static String version = "20180226.1";
     private int logLevel = 3;
 
     private String className = "LoadDataFromExcel";
@@ -323,14 +323,14 @@ public class LoadDataFromExcel {
                 
                     myArea="ExecutingBatch";
                     logMessage = "Batch added. Executing batch...";
-                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    log(myName, Constants.DEBUG, myArea, logMessage);
                     preparedStatement.executeBatch();
                     myArea="ClearingBatch";
                     logMessage = "Batch executed. Clearing batch...";
-                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    log(myName, Constants.DEBUG, myArea, logMessage);
                     preparedStatement.clearBatch();
                     logMessage = "Batch cleared."; // Close preparedStatement...";
-                    log(myName, Constants.VERBOSE, myArea, logMessage);
+                    log(myName, Constants.DEBUG, myArea, logMessage);
 //                    myArea="ClosingStatement";
 //                    preparedStatement.close();
 //                    logMessage = "preparedStatement closed.";
@@ -343,6 +343,7 @@ public class LoadDataFromExcel {
                             log(myName, Constants.ERROR, myArea, logMessage);
                             returnMessage = logMessage;
                             setErrorMessage(Constants.ERROR, logMessage);
+                            outBatchUpdateExceptions(e);
                         }
                 
                 myArea="CommitCheck";
@@ -356,7 +357,6 @@ public class LoadDataFromExcel {
                     arrayCounter =0;
                 }
             }
-            //TODO: Handle remaining rows in Array Insert
             
             myArea="Remainder";
             if (commitCounter > 0) {
@@ -370,7 +370,7 @@ public class LoadDataFromExcel {
             connection.close();
 //            returnMessage = Constants.OK;
         } catch (SQLException e) {
-            myArea = "Exception handling";
+            myArea = "Exception handling" +myArea;
             errorCounter++;
             logMessage = "SQLException processing data for row >" + Integer.toString(rowCounter) +"<. Error=>" + e.toString() + "<.";
             log(myName, Constants.ERROR, myArea, logMessage);
@@ -386,6 +386,8 @@ public class LoadDataFromExcel {
     private void getDatabaseColumnNames() {
         //Function to read the names of the database columns	
         Attribute attribute = new Attribute();
+        //reset
+        colCounter=0;
         DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
         for (int i = 0; i < tableExcelFile.get(0).size(); i++) { // next column names
             attribute = tableExcelFile.get(0).get(i); //first column name
@@ -406,20 +408,20 @@ public class LoadDataFromExcel {
                     }
                     concatenatedBindVariables = "?";
                     numberOfColumns = 1;
-                    } else {
-                        if (attribute.getFormat() == "NUMERIC") {
-                            concatenatedDatabaseColumnNames =
+                } else {
+                    if (attribute.getFormat() == "NUMERIC") {
+                       concatenatedDatabaseColumnNames =
                             concatenatedDatabaseColumnNames + "," + String.valueOf(attribute.getNumber());
-                        } else {
-                            if (attribute.getFormat() == "DATE") {
-                                String text = df.format(attribute.getDate());
-                                concatenatedDatabaseColumnNames = concatenatedDatabaseColumnNames + "," + text;
-                            } else { //String, boolean and others
-                                concatenatedDatabaseColumnNames = concatenatedDatabaseColumnNames + "," + attribute.getText();
-                            }
-                        }
-                        concatenatedBindVariables = concatenatedBindVariables + ",?";
-                        numberOfColumns++;
+                    } else {
+                        if (attribute.getFormat() == "DATE") {
+                             String text = df.format(attribute.getDate());
+                             concatenatedDatabaseColumnNames = concatenatedDatabaseColumnNames + "," + text;
+                         } else { //String, boolean and others
+                             concatenatedDatabaseColumnNames = concatenatedDatabaseColumnNames + "," + attribute.getText();
+                         }
+                     }
+                     concatenatedBindVariables = concatenatedBindVariables + ",?";
+                     numberOfColumns++;
                     }
                 colCounter++;
                 break;
@@ -730,5 +732,26 @@ public class LoadDataFromExcel {
         }
         
         return outcome;
+    }
+
+    private void outBatchUpdateExceptions(SQLException e) {
+        String myName="outBatchUpdateExceptions";
+        String myArea="Exception Handling";
+        int i=0;
+        //Code taken from: https://www.ibm.com/support/knowledgecenter/en/SSEPGG_11.1.0/com.ibm.db2.luw.apdv.java.doc/src/tpc/imjcc_tjvjdbue.html
+        log(myName, Constants.INFO, myArea, "Contents of BatchUpdateException. First error message:");
+        log(myName, Constants.ERROR, myArea, "Message ......: " + e.getMessage());
+        log(myName, Constants.ERROR, myArea, "SQLSTATE .....: " + e.getSQLState());
+        log(myName, Constants.ERROR, myArea, "Error Code ...: " + e.getErrorCode());
+        SQLException ex = e.getNextException();
+        while (ex != null) {
+            i++;
+            log(myName, Constants.ERROR, myArea, "SQL Exception >" + Integer.toString(i) +"<.");
+            log(myName, Constants.ERROR, myArea, "Message ......: " + e.getMessage());
+            log(myName, Constants.ERROR, myArea, "SQLSTATE .....: " + e.getSQLState());
+            log(myName, Constants.ERROR, myArea, "Error Code ...: " + e.getErrorCode());
+            ex = ex.getNextException();
+        }
+        
     }
 }
