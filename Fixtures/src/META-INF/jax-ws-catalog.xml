@@ -1,6 +1,0 @@
-<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-  <system systemId="http://oesv7022.rabobank.nl:7333/wsh/services/BatchServices/DataIntegration?WSDL"
-          uri="../com/informatica/wsh/DataIntegrationService.wsdl"/>
-  <system systemId="http://oesv7022.rabobank.nl:7333/wsh/services/Metadata?wsdl"
-          uri="../com/informatica/wsh/MetadataService.wsdl"/>
-</catalog>
