@@ -34,6 +34,12 @@ public class Constants {
     public static final String NOT_PROVIDED = "NotProvided";
     public static final String DEFAULT = "default";
     public static final String UNKNOWN = "unknown";
+
+    public static final String ERRCODE_NOT_IMPLEMENTED="CNSG-FIT-0001";
+    public static final String ERRCODE_DBCONNECTION ="CNSG-DB-0001";
+    public static final String ERRCODE_DBMETADATA  ="CNSG-DB-0002";
+    public static final String ERRCODE_DBMETADATA_COLUMNS  ="CNSG-DB-0003";
+
     public static final String NOT_IMPLEMENTED = "Not yet implemented.";
     public static final String NOT_INITIALIZED = "Not initialized";
     public static final String NONE = "None";
