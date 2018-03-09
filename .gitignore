@@ -1,5 +1,7 @@
 .idea
 .DS_Store
+.sync
 Fixtures/FitNesseRoot
 Fixtures/target
+Fixtures/~
 

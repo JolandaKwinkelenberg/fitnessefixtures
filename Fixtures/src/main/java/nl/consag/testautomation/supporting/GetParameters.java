@@ -3,7 +3,6 @@ package nl.consag.testautomation.supporting;
 import java.io.*;
 
 import java.util.Properties;
-import nl.consag.testautomation.supporting.Constants;
 
 public class GetParameters {
     

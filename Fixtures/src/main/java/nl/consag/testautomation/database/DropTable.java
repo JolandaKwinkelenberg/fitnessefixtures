@@ -10,20 +10,22 @@ import java.sql.*;
 import java.text.*;
 
 import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.Logging;
 import nl.consag.testautomation.supporting.GetParameters;
+import nl.consag.testautomation.supporting.Logging;
 
 public class DropTable {
-
+    private static String version ="20180309.0";
 	private String className = "DropTable";
-	private String logFileName = Constants.NOT_INITIALIZED;
+
+    private String logFileName = Constants.NOT_INITIALIZED;
 	private String context = Constants.DEFAULT;
 	private String startDate = Constants.NOT_INITIALIZED;
     private String notInitialized = Constants.NOT_INITIALIZED;
     private String errorMessage = Constants.NO_ERRORS;
     private int logLevel =3;
+    private int logEntries =0;
 
-	private String driver;
+    private String driver;
 	private String url;
 	private String userId;
 	private String password;
@@ -80,6 +82,7 @@ public class DropTable {
         boolean rc =false;
         String commentFound=Constants.NOT_FOUND;
 
+        //TODO: If schema is in allowed list, do not prefix the table
         String tableName = tablePrefix + inTableName;
         databaseName=inDatabase;
         myArea="check db type";
@@ -229,8 +232,11 @@ public class DropTable {
            if(Constants.logLevel.indexOf(level.toUpperCase()) > getIntLogLevel()) {
                return;
            }
-
-            Logging.LogEntry(logFileName, name, level, location, logText);  
+        logEntries++;
+        if(logEntries ==1) {
+            Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());
+        }
+            Logging.LogEntry(logFileName, name, level, location, logText);
        }
 
     /**
@@ -270,4 +276,9 @@ public class DropTable {
     return logLevel;
     }
 
-}
+        public static String getVersion() {
+            return version;
+        }
+
+
+    }

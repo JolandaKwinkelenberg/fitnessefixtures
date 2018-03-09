@@ -14,6 +14,7 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
 import nl.consag.testautomation.supporting.Constants;
 import nl.consag.testautomation.supporting.Logging;
 import nl.consag.testautomation.supporting.Attribute;
@@ -258,7 +259,7 @@ public class LoadDataFromExcel {
                     } else {
                         setPreviousCellFormat(bindVariableNo,attribute.getFormat());
                     }
-                    if (Constants.SIEBEL_NULL_VALUE.equals(attribute.getText())) {
+                    if (Constants.NULL_VALUE.equals(attribute.getText())) {
                         log(myName, Constants.DEBUG, myArea, "Null string detected in bind col >" + Integer.toString(bindVariableNo) +"<. Setting column to NULL.");
                         switch (attribute.getFormat()) {
                         case Constants.EXCEL_CELLFORMAT_NUMERIC:

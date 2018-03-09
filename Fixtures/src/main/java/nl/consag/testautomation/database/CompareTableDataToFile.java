@@ -9,8 +9,9 @@
 package nl.consag.testautomation.database;
 
 import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.Logging;
+import nl.consag.testautomation.supporting.Diff;
 import nl.consag.testautomation.supporting.GetParameters;
+import nl.consag.testautomation.supporting.Logging;
 
 import nl.consag.testautomation.linux.FileOperation;
 
@@ -30,8 +31,6 @@ import java.util.*;
 import java.text.ParseException;
 
 import org.apache.commons.io.FileUtils;
-
-import nl.consag.testautomation.supporting.Diff;
 
 
 public class CompareTableDataToFile {
@@ -1211,7 +1210,7 @@ public class CompareTableDataToFile {
                return;
            }
 
-        Logging.LogEntry(getLogFilename(), name, level, location, logText);     
+        Logging.LogEntry(getLogFilename(), name, level, location, logText);
        }
 
     /**

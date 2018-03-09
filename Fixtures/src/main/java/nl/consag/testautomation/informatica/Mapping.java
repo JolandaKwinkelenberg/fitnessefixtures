@@ -324,7 +324,7 @@ public class Mapping {
         }
         logEntries++;
         if(logEntries ==1) {
-        Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());                 
+        Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());
         }
 
     Logging.LogEntry(logFileName, name, level, location, logText);  

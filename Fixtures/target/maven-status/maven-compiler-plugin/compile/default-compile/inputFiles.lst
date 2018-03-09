@@ -2,6 +2,7 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/Attribute.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/Diff.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/excel/ReadExcelFileWithWorksheetName.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/Parameters.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/DIServiceInfo.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/TruncateTable.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/DataIntegrationClient.java
@@ -115,6 +116,7 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/TypeGetWorkflowDetailsExRequest.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/BasicDelete.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/DIServerInfo.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/Decrypt.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/StartWorkflowLogFetchRequest.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/PerformanceCounter.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/LoadDataFromExcel.java

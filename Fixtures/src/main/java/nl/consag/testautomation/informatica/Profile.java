@@ -589,7 +589,7 @@ public class Profile {
         
 
         //Script to use for RunIdqProfile
-        result =GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQPROFILE_SCRIPT);
+        result = GetParameters.getPropertyVal(Constants.FIXTURE_PROPERTIES, Constants.PARAM_RUNIDQPROFILE_SCRIPT);
         if(Constants.NOT_FOUND.equals(result)) {
             setProfileScript(Constants.RUNIDQPROFILE_DEFAULT_SCRIPT);
         }

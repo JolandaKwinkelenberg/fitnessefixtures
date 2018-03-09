@@ -10,6 +10,7 @@ package nl.consag.testautomation.database;
 import nl.consag.testautomation.supporting.Constants;
 import nl.consag.testautomation.supporting.GetParameters;
 import nl.consag.testautomation.supporting.Logging;
+
 import java.sql.*;
 import java.text.SimpleDateFormat;
 
@@ -190,7 +191,7 @@ public class TruncateTable {
 		   String myArea="reading";
 		   String logMessage = Constants.NOT_INITIALIZED;
 
-		   databaseType =GetParameters.GetDatabaseType(databaseName);
+		   databaseType = GetParameters.GetDatabaseType(databaseName);
                     logMessage="Database type: " + databaseType;
                     log(myName, Constants.VERBOSE, myArea, logMessage);
        
@@ -223,7 +224,7 @@ public class TruncateTable {
                return;
            }
 
-        Logging.LogEntry(logFileName, name, level, location, logText);  
+        Logging.LogEntry(logFileName, name, level, location, logText);
        }
 
     /**

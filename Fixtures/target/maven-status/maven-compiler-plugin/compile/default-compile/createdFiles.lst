@@ -1,6 +1,7 @@
 nl/consag/testautomation/database/RemoveDataUsingExcel.class
 nl/consag/testautomation/excel/ReadExcelFileWithWorksheetName.class
 com/informatica/wsh/ParameterArray.class
+nl/consag/testautomation/supporting/Parameters.class
 org/infoscoop/util/Xml2Json$NoOpListner.class
 com/informatica/wsh/EWorkflowRunType.class
 com/informatica/wsh/LoginRequest.class
@@ -114,6 +115,7 @@ nl/consag/testautomation/ConsagFitNesseFixtures.class
 com/informatica/wsh/LinkDetails.class
 com/informatica/wsh/StartSessionLogFetchRequest.class
 nl/consag/testautomation/powercenter/PWCDataIntegrationService.class
+nl/consag/testautomation/supporting/Decrypt.class
 com/informatica/wsh/TypeStartWorkflowExRequest.class
 com/informatica/wsh/DataIntegrationInterface.class
 com/informatica/wsh/RepositoryInfo.class

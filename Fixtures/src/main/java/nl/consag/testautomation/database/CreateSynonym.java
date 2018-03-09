@@ -10,18 +10,21 @@ import java.sql.*;
 import java.text.*;
 
 import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.Logging;
 import nl.consag.testautomation.supporting.GetParameters;
+import nl.consag.testautomation.supporting.Logging;
 
 public class CreateSynonym {
+    private static String version ="20180306.0";
 
-	private String className = "CreateSynonym";
+
+    private String className = "CreateSynonym";
 	private String logFileName = Constants.NOT_INITIALIZED;
 	private String context = Constants.DEFAULT;
 	private String startDate = Constants.NOT_INITIALIZED;
     private String notInitialized = Constants.NOT_INITIALIZED;
     private String errorMessage = Constants.NO_ERRORS;
-	private boolean verbose=false;
+
+    private boolean verbose=false;
     private int logLevel =3;
 
 
@@ -87,7 +90,7 @@ public class CreateSynonym {
         readParameterFile();
         
         if("Oracle".equals(databaseType) || "DB2".equals(databaseType)) {
-            sqlStatement = "create synonym " + synonymName + " for " + GetParameters.GetDatabaseUserName(inSrcDatabase) + "." + inObject;  
+            sqlStatement = "create synonym " + synonymName + " for " + GetParameters.GetDatabaseUserName(inSrcDatabase) + "." + inObject;
         } else {
             logMessage="databaseType >" + databaseType +"< not yet supported";       log(myName, "info", myArea, logMessage);  
             errorMessage=logMessage;
@@ -189,7 +192,7 @@ public class CreateSynonym {
                return;
            }
 
-            Logging.LogEntry(logFileName, name, level, location, logText);  
+            Logging.LogEntry(logFileName, name, level, location, logText);
        }
 
 	public String getLogFilename() {
@@ -233,6 +236,24 @@ public class CreateSynonym {
      */
     public Integer getIntLogLevel() {
         return logLevel;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public String synonymForUserExistsInDatabaseForObjectInSchema(
+            String userName
+            ,String databaseName
+            ,String tableName
+            ,String schemaName
+    ) {
+        setErrorMessage(Constants.NOT_IMPLEMENTED);
+        return Constants.NOT_IMPLEMENTED;
     }
 
 }

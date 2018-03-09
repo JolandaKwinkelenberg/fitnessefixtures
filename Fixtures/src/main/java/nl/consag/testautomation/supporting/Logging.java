@@ -1,8 +1,5 @@
 package nl.consag.testautomation.supporting;
 
-import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.InformaticaFixtureMessages;
-
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;

@@ -12,8 +12,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.Logging;
 import nl.consag.testautomation.supporting.GetParameters;
+import nl.consag.testautomation.supporting.Logging;
+
 import java.sql.*;
 import java.text.ParseException;
  import java.text.SimpleDateFormat;
@@ -821,7 +822,7 @@ public class CheckQuery {
                      return;
                  }
 
-        Logging.LogEntry(logFileName, name, level, location, logText);  
+        Logging.LogEntry(logFileName, name, level, location, logText);
              }
 
           /**

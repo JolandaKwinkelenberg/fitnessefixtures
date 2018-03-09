@@ -203,7 +203,7 @@ public class RemoveDataUsingExcel {
         String myArea="reading";
         String logMessage = Constants.NO;
 
-        databaseType=GetParameters.GetDatabaseType(databaseName);
+        databaseType= GetParameters.GetDatabaseType(databaseName);
         logMessage="Database type: " + databaseType;
         log(myName, "info", myArea, logMessage);
 

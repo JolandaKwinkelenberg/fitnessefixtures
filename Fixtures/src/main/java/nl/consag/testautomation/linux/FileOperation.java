@@ -10,9 +10,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.consag.testautomation.supporting.Constants;
 import nl.consag.testautomation.supporting.GetParameters;
 import nl.consag.testautomation.supporting.Logging;
-import nl.consag.testautomation.supporting.Constants;
 
 import java.text.SimpleDateFormat;
 
@@ -785,7 +785,7 @@ public class FileOperation {
                return;
            }
 
-        Logging.LogEntry(getLogFilename(), name, level, location, logText);     
+        Logging.LogEntry(getLogFilename(), name, level, location, logText);
        }
 
     /**

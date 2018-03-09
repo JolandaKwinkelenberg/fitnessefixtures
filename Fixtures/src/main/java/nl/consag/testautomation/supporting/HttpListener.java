@@ -1,13 +1,8 @@
 package nl.consag.testautomation.supporting;
 
 import java.net.*;
-import java.net.Socket.*;
 import java.io.*;
-import java.util.Random;
-import java.util.Calendar;
 import java.lang.*;
-
-import javax.xml.stream.util.StreamReaderDelegate;
 
 
 /************************  ** * * * * * * * * * * * * ** * * * *******************/

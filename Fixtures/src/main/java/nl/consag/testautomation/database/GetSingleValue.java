@@ -15,9 +15,10 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 
 import java.util.*;
+
 import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.Logging;
 import nl.consag.testautomation.supporting.GetParameters;
+import nl.consag.testautomation.supporting.Logging;
 
 /**
  */

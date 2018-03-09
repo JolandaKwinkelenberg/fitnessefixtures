@@ -3,7 +3,7 @@
  * @author Edward Crain
  * @version 11 October 2014
  */ 
-package nl.consag.testautomation.examples; 
+package nl.consag.testautomation.examples;
   
 public class ShouldIBuyMilk { 
     private int dollars; 

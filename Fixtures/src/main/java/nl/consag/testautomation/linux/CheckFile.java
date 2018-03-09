@@ -6,9 +6,10 @@
 
 package nl.consag.testautomation.linux;
 
-import nl.consag.testautomation.supporting.Logging;
-import nl.consag.testautomation.supporting.GetParameters;
 import nl.consag.testautomation.supporting.Constants;
+import nl.consag.testautomation.supporting.GetParameters;
+import nl.consag.testautomation.supporting.Logging;
+
 import java.io.*;
 
 import java.text.SimpleDateFormat;
@@ -593,7 +594,7 @@ public class CheckFile {
            }
            logEntries++;
            if(logEntries ==1) {
-            Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());                 
+            Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());
            }
 
 

@@ -5,14 +5,13 @@
 */
 package nl.consag.testautomation.database;
 
+import nl.consag.testautomation.supporting.Constants;
+import nl.consag.testautomation.supporting.GetParameters;
 import nl.consag.testautomation.supporting.Logging;
 
 import java.util.*;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-
-import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.GetParameters;
 
 public class BasicUpdate {
 

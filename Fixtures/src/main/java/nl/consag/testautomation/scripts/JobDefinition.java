@@ -20,8 +20,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.Logging;
 import nl.consag.testautomation.supporting.GetParameters;
+import nl.consag.testautomation.supporting.Logging;
 import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
 public class JobDefinition {
@@ -740,7 +740,7 @@ private void log(String name, String level, String location, String logText) {
             }
             logEntries++;
             if(logEntries ==1) {
-            Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());                 
+            Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());
             }
 
         Logging.LogEntry(logFileName, name, level, location, logText);	

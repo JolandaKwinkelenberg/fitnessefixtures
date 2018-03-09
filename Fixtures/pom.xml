@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>nl.consag.testautomation</groupId>
   <artifactId>ConsagFitNesseFixtures</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
@@ -19,6 +19,11 @@
         </configuration>
         <groupId>org.apache.maven.plugins</groupId>
       </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-release-plugin</artifactId>
+            <version>2.5.3</version>
+        </plugin>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jar-plugin</artifactId>
@@ -46,13 +51,18 @@
   </build>
   <modules/>
   <dependencies>
+
       <!-- https://mvnrepository.com/artifact/org.codehaus.mojo/versions-maven-plugin -->
+      <dependency>
+          <groupId>org.bouncycastle.bcprov-jdk15on.1.57.org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk15on</artifactId>
+          <version>1.57</version>
+      </dependency>
       <dependency>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
           <version>2.5</version>
       </dependency>
-
       <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -102,6 +112,7 @@
       <scope>compile</scope>
       <type>jar</type>
     </dependency>
+
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
@@ -120,10 +131,36 @@
   </dependencies>
   <description>Consag Testautomation - FitNesse Fixtures</description>
   <repositories>
-    <repository>
-      <id>Maven Central</id>
-      <name>Maven Central</name>
-      <url>https://repo.maven.apache.org/maven2</url>
-    </repository>
+      <repository>
+          <id>Maven Central</id>
+          <name>Maven Central</name>
+          <url>https://repo.maven.apache.org/maven2</url>
+      </repository>
+      <repository>
+          <id>rabo_dataquality_release</id>
+          <name>dqsquad-rabobank-release</name>
+          <url>https://nexus3.rabobank.nl/repository/rabo_dataquality_release/</url>
+      </repository>
+      <repository>
+          <id>rabo_dataquality_snapshot</id>
+          <name>dqsquad-rabobank-snapshot</name>
+          <url>https://nexus3.rabobank.nl/repository/rabo_dataquality_snapshot/</url>
+      </repository>
+      <repository>
+          <id>jboss-maven2-release-repository</id>
+          <name>JBoss</name>
+          <url>http://repository.jboss.org/maven2/</url>
+      </repository>
   </repositories>
+    <distributionManagement>
+    <snapshotRepository>
+        <id>rabo_dataquality_snapshot</id>
+        <url>https://nexus3.rabobank.nl/repository/rabo_dataquality_snapshot/</url>
+    </snapshotRepository>
+    <repository>
+        <id>rabo_dataquality_release</id>
+        <url>https://nexus3.rabobank.nl/repository/rabo_dataquality_release/</url>
+    </repository>
+</distributionManagement>
+
 </project>

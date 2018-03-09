@@ -17,11 +17,10 @@ import java.sql.*;
 import java.text.*;
 import java.util.*;
 
-import nl.consag.testautomation.linux.CheckFile;
-
 import nl.consag.testautomation.supporting.Constants;
-import nl.consag.testautomation.supporting.Logging;
 import nl.consag.testautomation.supporting.GetParameters;
+import nl.consag.testautomation.supporting.Logging;
+import nl.consag.testautomation.linux.CheckFile;
 
 public class BasicQuery {
     private static String version ="20161111.0";
@@ -407,7 +406,7 @@ public class BasicQuery {
             }
             logEntries++;
             if(logEntries ==1) {
-            Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());                 
+            Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());
             }
 
         Logging.LogEntry(logFileName, name, level, location, logText);	

@@ -20,8 +20,6 @@ import nl.consag.testautomation.scripts.ExecuteScript;
 
 import nl.consag.testautomation.scripts.ExecuteScript.ExecuteScriptStopTest;
 
-import org.apache.commons.lang3.StringUtils;
-
 public class DISObject {
     private static final String version = "20170225.0";
 
@@ -114,7 +112,7 @@ public class DISObject {
         }
         logEntries++;
         if(logEntries ==1) {
-        Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());                 
+        Logging.LogEntry(logFileName, className, Constants.INFO, "Fixture version", getVersion());
         }
 
     Logging.LogEntry(logFileName, name, level, location, logText);  

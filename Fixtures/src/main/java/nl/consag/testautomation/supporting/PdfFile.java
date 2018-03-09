@@ -2,7 +2,6 @@ package nl.consag.testautomation.supporting;
 
 import java.io.IOException;
 
-import nl.consag.testautomation.supporting.Constants;
 import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
