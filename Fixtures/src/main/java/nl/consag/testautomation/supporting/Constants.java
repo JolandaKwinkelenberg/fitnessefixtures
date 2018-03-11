@@ -134,6 +134,8 @@ public class Constants {
     public static final String FITNESSE_DELIMITER ="|";
     public static final String PROPERTY_DELIMITER ="=";
     public static final String DATABASE_PROPERTIES_DELIMITER =":";
+    public static final String DATABASE_OBJECT_DELIMITER =".";
+    //TODO: Depend object delimiter on database platform (not all databases may use . as separator between schema and object
 
     public static final String IDAA_STATS_COLLECTION_DBPROP ="collectionDB";
     public static final String IDAA_STATS_COLLECTION_DB ="DBAJ";

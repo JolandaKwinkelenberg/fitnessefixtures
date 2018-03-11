@@ -23,7 +23,7 @@ import nl.consag.testautomation.supporting.Parameters;
 import static nl.consag.testautomation.supporting.Constants.propFileErrors;
 
 public class CreateTable {
-    private static String version ="20180309.0";
+    private static String version ="20180311.0";
 
     private int logLevel =3;
     private int logEntries =0;
@@ -42,9 +42,15 @@ public class CreateTable {
     private String databaseType;
     private String databaseTableOwner;
     private String databaseTableOwnerPassword;
+    private String tableOwnerTablePrefix;
+    private String tableOwnerUseTablePrefix; //from connetions.properties
+    private boolean useTablePrefix =true;
     private String databaseSchema;
+    private boolean useSchema =false;
+    private boolean useTableOwner =true;
     private String tableComment = Constants.TABLE_COMMENT;
     private String errorMessage = Constants.NO_ERRORS;
+
     private String errorCode=Constants.OK;
     private String idaaName =Constants.NOT_PROVIDED;
     private String databaseName =Constants.NOT_PROVIDED;
@@ -354,25 +360,60 @@ public class CreateTable {
             return;
         else setDatabaseTableOwnerPassword(result);
 
-        result =getProperty(Constants.CONNECTION_PROPERTIES, getDatabaseConnection() +".schemaname", false);
-        if(getErrorIndicator())
-            return;
-        else setDatabaseSchema(result);
+        result =getProperty(Constants.CONNECTION_PROPERTIES, getDatabaseConnection() +".tableowner.usetableprefix", false);
+        if(!getErrorIndicator())
+            setTableOwnerUseTablePrefix(result);
 
-        logMessage = "databaseType >" + getDatabaseType() + "<.";
-        log(myName, Constants.INFO, myArea, logMessage);
-        logMessage = "databaseConnection >" + getDatabaseConnection() + "<.";
-        log(myName, Constants.INFO, myArea, logMessage);
-        logMessage = "databaseDriver >" + getDatabaseDriver() + "<.";
-        log(myName, Constants.INFO, myArea, logMessage);
-        logMessage = "databaseUrl >" + getDatabaseUrl() + "<.";
-        log(myName, Constants.INFO, myArea, logMessage);
-        logMessage = "databaseUserId >" + getDatabaseUserId() + "<.";
-        log(myName, Constants.INFO, myArea, logMessage);
-        logMessage = "databaseTableOwner >" + getDatabaseTableOwner() + "<.";
-        log(myName, Constants.INFO, myArea, logMessage);
-        logMessage = "databaseSchema >" + getDatabaseSchema() + "<.";
-        log(myName, Constants.INFO, myArea, logMessage);
+        result =getProperty(Constants.CONNECTION_PROPERTIES, getDatabaseConnection() +".tableowner.tableprefix", false);
+        if(!getErrorIndicator())
+            setTableOwnerTablePrefix(result);
+
+        result =getProperty(Constants.CONNECTION_PROPERTIES, getDatabaseConnection() +".schemaname", false);
+        if(!getErrorIndicator())
+            setDatabaseSchema(result);
+
+        log(myName, Constants.INFO, myArea, "databaseType ..........>" + getDatabaseType() + "<.");
+        log(myName, Constants.INFO, myArea, "databaseConnection ....>" + getDatabaseConnection() + "<.");
+        log(myName, Constants.INFO, myArea, "databaseDriver ........>" + getDatabaseDriver() + "<.");
+        log(myName, Constants.INFO, myArea, "databaseUrl ...........>" + getDatabaseUrl() + "<.");
+        log(myName, Constants.INFO, myArea, "databaseUserId ........>" + getDatabaseUserId() + "<.");
+        log(myName, Constants.INFO, myArea, "databaseTableOwner ....>" + getDatabaseTableOwner() + "<.");
+        log(myName, Constants.INFO, myArea, "databaseSchema ........>" + getDatabaseSchema() + "<.");
+        log(myName, Constants.INFO, myArea, "tablePrefix ...........>" + getTableOwnerTablePrefix() + "<.");
+        log(myName, Constants.INFO, myArea, "useTablePrefix ........>" + getTableOwnerUseTablePrefix() +"<.");
+        if(Constants.FALSE.equalsIgnoreCase(getTableOwnerUseTablePrefix())) {
+            setTableOwnerUseTablePrefix(false);
+        } else {
+            setTableOwnerUseTablePrefix(true);
+        }
+        if(useTablePrefix) log(myName, Constants.DEBUG, myArea, "useTablePrefix has been set to >true<");
+            else log(myName, Constants.DEBUG, myArea, "useTablePrefix has been set to >false<");
+
+        if(Constants.DEFAULT_PROPVALUE.equals(getDatabaseSchema())) {
+            setUseSchema(false);
+        } else {
+            setUseSchema(true);
+        }
+        if(useSchema) log(myName, Constants.DEBUG, myArea, "useSchema has been set to >true<.");
+        else log(myName, Constants.DEBUG, myArea, "useSchema has been set to >false<");
+
+        if(Constants.DEFAULT_PROPVALUE.equals(getDatabaseTableOwner())) {
+            setUseTableOwner(false);
+        } else {
+            setUseTableOwner(true);
+        }
+        if(useTableOwner) log(myName, Constants.DEBUG, myArea, "useTableOwner has been set to >true<.");
+        else log(myName, Constants.DEBUG, myArea, "useTableOwner has been set to >false<.");
+
+        if(Constants.DEFAULT_PROPVALUE.equals(getTableOwnerTablePrefix())) {
+            setTableOwnerTablePrefix(Constants.TABLE_PREFIX);
+            log(myName, Constants.INFO, myArea, "Table prefix has been set to >" + getTableOwnerTablePrefix() +"<.");
+        }
+
+    }
+
+    private void setTableOwnerUseTablePrefix(boolean b) {
+        this.useTablePrefix =b;
     }
 
     private void setDatabaseUrl(String databaseUrl) {
@@ -582,14 +623,46 @@ public class CreateTable {
         Connection connection = null;
         List<String> columnList =null;
         String rc =Constants.OK;
+        String targetTableName;
+        String targetObjectName;
 
         log(myName, Constants.DEBUG, myLocation, "Database connection set to >" + srcDatabase +"<.");
-        setDatabaseConnection(srcDatabase);
+
+        setDatabaseConnection(tgtDatabase);
         readParameterFile();
+
         if(getErrorIndicator()) {
             setError(Constants.ERRCODE_PROPERTIES,"An error occurred while determining connection properties");
             return false;
         }
+
+        if(useTablePrefix) {
+            targetTableName = getTableOwnerTablePrefix() + tgtTable;
+            log(myName, Constants.DEBUG, myLocation, "useTablePrefix is >true<. Table name set to >" + targetTableName +"<.");
+        } else {
+            targetTableName = tgtTable;
+            log(myName, Constants.DEBUG, myLocation, "useTablePrefix is >false<. Table name is >" + targetTableName +"<.");
+        }
+
+        if(!tgtSchema.isEmpty()) {
+            targetObjectName = tgtSchema + Constants.DATABASE_OBJECT_DELIMITER + targetTableName;
+            log(myName, Constants.DEBUG, myLocation, "Provided schema is >" + tgtSchema +"<. Object name set to >" + targetObjectName +"<.");
+        } else {
+            if(useSchema) {
+                targetObjectName = getDatabaseSchema() + Constants.DATABASE_OBJECT_DELIMITER + targetTableName;
+                log(myName, Constants.DEBUG, myLocation, "No schema provided >" + tgtSchema
+                        +"<. Schema name " + getDatabaseSchema() +" taken from properties. Object name set to >" + targetObjectName +"<.");
+            } else {
+                targetObjectName = targetTableName;
+                log(myName, Constants.DEBUG, myLocation, "No schema provided >" + tgtSchema
+                        +"< and no schema in properties file. Object name set to >" + targetObjectName +"<.");
+            }
+        }
+
+        log(myName, Constants.INFO, myLocation, "Target object name is >" + targetObjectName +"<.");
+
+        setDatabaseConnection(srcDatabase);
+        readParameterFile();
 
         try {
             myLocation="getConnection";
@@ -606,9 +679,9 @@ public class CreateTable {
                 } else {
                     log(myName, Constants.DEBUG, myLocation, "Table has >" + columnList.size() + "< columns.");
                 }
-                rc = createTable(tgtDatabase, tgtSchema, tgtTable, convertArrayToString(columnList));
+                rc = createTable(tgtDatabase, targetObjectName, convertArrayToString(columnList));
                 if(!Constants.OK.equals(rc)) {
-                    setError(rc,"Error creating table: " + getErrorMessage());
+                    setError(rc,"Error creating table >" + targetObjectName +"<. Error: " + getErrorMessage());
                 }
             } catch (SQLException e) {
                 setError(Constants.ERRCODE_DBMETADATA, "Error getting metadata. Exception=>"
@@ -627,8 +700,8 @@ public class CreateTable {
 
     }
 
-    private String createTable(String tgtDatabase, String tgtSchema, String tgtTable, String columnList) {
-        String myName = "createTable4args";
+    private String createTable(String tgtDatabase, String tgtTable, String columnList) {
+        String myName = "createTable3args";
         String myLocation ="start";
 
         log(myName, Constants.DEBUG, myLocation,"Database connection set to >" + tgtDatabase +"<.");
@@ -677,7 +750,7 @@ public class CreateTable {
                 //Printing results
                 logMessage =col.getColName() + "---" + col.getDataType() + "---" + col.getTypeName() + "---"
                         + col.getColumnSize() + "---" + col.getDecimalDigits() + "---" + col.getIsNullable();
-                log(myName,Constants.DEBUG,myLocation,logMessage);
+                log(myName,Constants.VERBOSE,myLocation,logMessage);
                 colDefinitionString=col.getColName() +" ";
                 log(myName, Constants.VERBOSE, myLocation,"Column type is >" +col.getTypeName() +"<.");
                 switch (col.getTypeName()) {
@@ -861,6 +934,34 @@ public class CreateTable {
     public String getDatabaseSchema() {
         return this.databaseSchema;
     }
+
+    public void setTableOwnerUseTablePrefix(String tableOwnerUseTablePrefix) {
+        this.tableOwnerUseTablePrefix = tableOwnerUseTablePrefix;
+    }
+    public String getTableOwnerUseTablePrefix() {
+        return this.tableOwnerUseTablePrefix;
+    }
+
+    public void setTableOwnerTablePrefix(String tableOwnerTablePrefix) {
+        this.tableOwnerTablePrefix = tableOwnerTablePrefix;
+    }
+    public String getTableOwnerTablePrefix() {
+        return this.tableOwnerTablePrefix;
+    }
+
+    private void setUseSchema(boolean useSchema) {
+        this.useSchema = useSchema;
+    }
+    private boolean getUseSchema() {
+        return this.useSchema;
+    }
+    private void setUseTableOwner(boolean useTableOwner) {
+        this.useTableOwner = useTableOwner;
+    }
+    private boolean getUseTableOwner() {
+        return this.useTableOwner;
+    }
+
 
     private  class colDefinition {
         private  String colName;
