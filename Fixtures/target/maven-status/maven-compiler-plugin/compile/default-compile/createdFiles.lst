@@ -1,6 +1,7 @@
 nl/consag/testautomation/database/RemoveDataUsingExcel.class
 nl/consag/testautomation/excel/ReadExcelFileWithWorksheetName.class
 com/informatica/wsh/ParameterArray.class
+com/ibm/jason/arnold/EstimateHPSSSavings.class
 nl/consag/testautomation/supporting/Parameters.class
 org/infoscoop/util/Xml2Json$NoOpListner.class
 com/informatica/wsh/EWorkflowRunType.class
@@ -8,9 +9,9 @@ com/informatica/wsh/LoginRequest.class
 com/informatica/wsh/RepositoryInfoArray.class
 org/infoscoop/util/Xml2JsonListener.class
 com/informatica/wsh/package-info.class
-nl/consag/testautomation/database/ExecuteQuery.class
 nl/consag/testautomation/supporting/InformaticaFixtureMessages.class
 nl/consag/testautomation/supporting/SupportingRunScript.class
+nl/consag/testautomation/IDAATools/getQueries$Pair.class
 nl/consag/testautomation/supporting/CheckFixtureProperties.class
 com/informatica/wsh/ObjectFactory.class
 com/informatica/wsh/MetadataService.class
@@ -25,12 +26,14 @@ com/informatica/wsh/DataIntegrationService.class
 com/informatica/wsh/MonitorDIServerRequest.class
 ml/options/Options.class
 nl/consag/testautomation/excel/ReadExcelFileWithWorksheetNumber.class
+nl/consag/testautomation/IDAATools/TableManagement.class
 nl/consag/testautomation/supporting/Encrypt.class
 com/informatica/wsh/TypeGetWorkflowDetailsExRequest.class
 nl/consag/testautomation/scripts/JobDefinition.class
 com/informatica/wsh/TaskTopLevelParent.class
 com/informatica/wsh/GetAllTaskInstancesRequest.class
 com/informatica/wsh/EDIServerMode.class
+nl/consag/testautomation/IDAATools/getQueries.class
 nl/consag/testautomation/database/LoadDataFromExcel.class
 com/informatica/wsh/Fault.class
 nl/consag/testautomation/database/DropTable.class
@@ -40,10 +43,13 @@ nl/consag/testautomation/supporting/ListUtility.class
 org/infoscoop/util/Xml2Json.class
 nl/consag/testautomation/informatica/Profile.class
 com/informatica/wsh/FolderInfoArray.class
+com/ibm/jason/arnold/SnapshotKeys.class
 nl/consag/testautomation/database/CreateTable$1.class
 ml/options/OptionSet.class
 nl/consag/testautomation/scripts/ExecuteScript.class
 nl/consag/testautomation/database/BasicDelete.class
+com/ibm/jason/arnold/CompareCompression$EraserThread.class
+com/ibm/jason/arnold/CompareCompression.class
 nl/consag/testautomation/supporting/GetDatabaseTable.class
 nl/consag/testautomation/database/CheckOutcomeQuery.class
 nl/consag/testautomation/supporting/PdfFile.class
@@ -55,6 +61,7 @@ com/informatica/wsh/SessionStatistics.class
 com/informatica/wsh/GetSessionStatisticsRequest.class
 com/informatica/wsh/ETaskRunMode.class
 nl/consag/testautomation/database/BasicQuery.class
+com/ibm/jason/arnold/SnapshotKeys$EraserThread.class
 com/informatica/wsh/GetSessionPerformanceDataRequest.class
 com/informatica/wsh/GetWorkflowLogRequest.class
 com/informatica/wsh/ETaskRunStatus.class
@@ -73,6 +80,7 @@ com/informatica/wsh/DIServiceInfo.class
 nl/consag/testautomation/database/CreateSynonym.class
 com/informatica/wsh/DIServerProperties.class
 com/informatica/wsh/TaskInstanceInfo.class
+com/ibm/jason/arnold/EstimateHPSSSavings$EraserThread.class
 com/informatica/wsh/DIServerInfoArray.class
 nl/consag/testautomation/supporting/GetParameters.class
 nl/consag/testautomation/supporting/Attribute.class
@@ -87,6 +95,7 @@ com/informatica/wsh/MetadataInterface.class
 nl/consag/testautomation/database/TablePrivileges.class
 nl/consag/testautomation/database/CompareTableDataToFile.class
 nl/consag/testautomation/informatica/DISObject.class
+com/ibm/jason/arnold/GetQueries.class
 com/informatica/wsh/Attribute.class
 com/informatica/wsh/Parameter.class
 nl/consag/testautomation/examples/ShouldIBuyMilk.class
@@ -100,6 +109,7 @@ com/informatica/wsh/TaskInstanceInfoArray.class
 com/informatica/wsh/WorkflowInfoArray.class
 com/informatica/wsh/DIServerDate.class
 nl/consag/testautomation/supporting/Diff.class
+com/ibm/jason/arnold/GetQueries$EraserThread.class
 com/informatica/wsh/PerformanceCounter.class
 com/informatica/wsh/TypeGetTaskDetailsExRequest.class
 com/informatica/wsh/LogSegment.class
@@ -110,6 +120,7 @@ com/informatica/wsh/DIServerDetails.class
 com/informatica/wsh/EWorkflowRunStatus.class
 com/informatica/wsh/VoidResponse.class
 com/informatica/wsh/WorkflowDetails.class
+nl/consag/testautomation/database/IdaaProcedures.class
 nl/consag/testautomation/linux/FileOperation.class
 nl/consag/testautomation/ConsagFitNesseFixtures.class
 com/informatica/wsh/LinkDetails.class
@@ -118,6 +129,7 @@ nl/consag/testautomation/powercenter/PWCDataIntegrationService.class
 nl/consag/testautomation/supporting/Decrypt.class
 com/informatica/wsh/TypeStartWorkflowExRequest.class
 com/informatica/wsh/DataIntegrationInterface.class
+nl/consag/testautomation/supporting/DatabaseConnection.class
 com/informatica/wsh/RepositoryInfo.class
 com/informatica/wsh/ETaskType.class
 com/informatica/wsh/SessionPerformanceData.class
@@ -126,8 +138,10 @@ nl/consag/testautomation/informatica/Mapping.class
 ml/options/Options$Prefix.class
 com/informatica/wsh/Log.class
 com/informatica/wsh/SessionHeader.class
+com/ibm/jason/arnold/RebuildTables.class
 com/informatica/wsh/Key.class
 com/informatica/wsh/VoidRequest.class
+com/ibm/jason/arnold/GetQueries$Pair.class
 com/informatica/wsh/WorkflowRequest.class
 nl/consag/testautomation/powercenter/StopWorkflow$WorkflowStopTest.class
 nl/consag/testautomation/database/GetSingleValue.class

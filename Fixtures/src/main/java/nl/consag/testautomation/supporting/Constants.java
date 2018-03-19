@@ -45,6 +45,8 @@ public class Constants {
     public static final String ERRCODE_DBMETADATA_COLUMNS  ="CNSG-DB-0003";
     public static final String ERRCODE_TABLENOTFOUND ="CNSG-DB-0004";
     public static final String ERRCODE_UNSUPPORTED_DATATYPE ="CNSG-DB-0005";
+    public static final String ERRCODE_SQL_IDAASQLERROR ="CNSG-DB-0006";
+    public static final String ERRCODE_SQL_IDAAGETRESULT ="CNSG-DB-0007";
 
     public static final String ERRCODE_DECRYPT ="CNSG-SEC-0001";
 

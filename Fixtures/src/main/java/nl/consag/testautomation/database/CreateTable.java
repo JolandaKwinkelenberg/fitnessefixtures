@@ -23,12 +23,12 @@ import nl.consag.testautomation.supporting.Parameters;
 import static nl.consag.testautomation.supporting.Constants.propFileErrors;
 
 public class CreateTable {
-    private static String version ="20180311.0";
+    private String className = "CreateTable";
+    private static String version ="20180313.0";
 
     private int logLevel =3;
     private int logEntries =0;
 
-    private String className = "CreateTable";
     private String logFileName = Constants.NOT_INITIALIZED;
     private String context = Constants.DEFAULT;
     private String startDate = Constants.NOT_INITIALIZED;
@@ -49,16 +49,16 @@ public class CreateTable {
     private boolean useSchema =false;
     private boolean useTableOwner =true;
     private String tableComment = Constants.TABLE_COMMENT;
-    private String errorMessage = Constants.NO_ERRORS;
-
-    private String errorCode=Constants.OK;
     private String idaaName =Constants.NOT_PROVIDED;
     private String databaseName =Constants.NOT_PROVIDED;
     private String actualDatabase = Constants.NOT_FOUND;
     private String tableName =Constants.NOT_PROVIDED;
-    private List<colDefinition> columns = new ArrayList<colDefinition>();
     private boolean errorIndicator =false;
 
+    private List<colDefinition> columns = new ArrayList<colDefinition>();
+
+    private String errorMessage = Constants.NO_ERRORS;
+    private String errorCode=Constants.OK;
 
     public CreateTable() {
         //Constructors
