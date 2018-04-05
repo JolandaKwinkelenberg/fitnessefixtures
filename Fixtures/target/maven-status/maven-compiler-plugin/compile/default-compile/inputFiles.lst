@@ -1,4 +1,5 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/linux/FileOperation.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/DatabaseConnection.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/Attribute.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/Diff.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/excel/ReadExcelFileWithWorksheetName.java
@@ -14,6 +15,7 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/powercenter/PWCDataIntegrationService.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/Encrypt.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/ml/options/OptionSet.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/IDAATools/com.ibm.jason.arnold/EstimateHPSSSavings.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/EWorkflowRunStatus.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/MetadataInterface.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/examples/KeyExample.java
@@ -22,6 +24,7 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/scripts/ExecuteScript.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/Fault.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/Attribute.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/IDAATools/com.ibm.jason.arnold/SnapshotKeys.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/GetSessionStatisticsRequest.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/powercenter/StartWorkflow.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/ObjectFactory.java
@@ -44,6 +47,7 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/WorkflowRequest.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/BasicQuery.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/GetNextLogSegmentRequest.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/IDAATools/TableManagement.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/CheckFixtureProperties.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/ParameterArray.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/org/infoscoop/util/Xml2JsonListener.java
@@ -73,9 +77,11 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/RepositoryInfo.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/CheckQuery.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/Constants.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/IDAATools/com.ibm.jason.arnold/GetQueries.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/FolderInfoArray.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/LogSegment.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/informatica/Mapping.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/IDAATools/com.ibm.jason.arnold/CompareCompression.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/PingDIServerRequest.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/TaskInstanceInfoArray.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/GetWorkflowLogRequest.java
@@ -97,6 +103,7 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/Key.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/MetadataService.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/EPerformanceCounterType.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/IDAATools/getQueries.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/informatica/DISObject.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/DIServerInfoArray.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/LoginRequest.java
@@ -108,6 +115,7 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/DropSynonym.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/ETaskType.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/WorkflowDetails.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/IDAATools/com.ibm.jason.arnold/RebuildTables.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/GetSessionLogRequest.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/DataIntegrationInterface.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/GetSingleValue.java
@@ -117,6 +125,7 @@
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/DIServerInfo.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/supporting/Decrypt.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/StartWorkflowLogFetchRequest.java
+/Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/IdaaProcedures.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/PerformanceCounter.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/nl/consag/testautomation/database/LoadDataFromExcel.java
 /Users/beekersjpa/GitRepos/fitnessefixtures/Fixtures/src/main/java/com/informatica/wsh/SessionStatistics.java

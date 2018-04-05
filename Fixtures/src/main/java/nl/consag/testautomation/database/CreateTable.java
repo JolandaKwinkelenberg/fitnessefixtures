@@ -24,7 +24,7 @@ import static nl.consag.testautomation.supporting.Constants.propFileErrors;
 
 public class CreateTable {
     private String className = "CreateTable";
-    private static String version ="20180313.0";
+    private static String version ="20180404.1";
 
     private int logLevel =3;
     private int logEntries =0;
@@ -91,8 +91,16 @@ public class CreateTable {
         //If DB2 and Database name provided, add it
         //If DB2 and Accelerator name is provided, add it
         if(databaseType.equals("DB2")) {
-            if(!getDatabase().equals(Constants.NOT_PROVIDED)) {
+            if(getDatabase().equals(Constants.NOT_PROVIDED)) {
+                if(getUseSchema() && ! Constants.DEFAULT_PROPVALUE.equals(getDatabaseSchema())) {
+                    log(myName,Constants.DEBUG, myArea, "UseSchema was set. Added IN DATABASE " + getDatabaseSchema());
+                    sqlStatement += " IN DATABASE " + getDatabaseSchema();
+                } else {
+                    log(myName, Constants.DEBUG, myArea, "getDatabase not provided and useSchema not set or DatabaseSchema not sset in propfile.");
+                }
+            } else {
                 sqlStatement +=" IN DATABASE " + getDatabase();
+                log(myName, Constants.DEBUG, myArea, "getDatabase provided. Added IN DATABASE.");
             }
             if(!getAccelerator().equals(Constants.NOT_PROVIDED)) {
                 sqlStatement +=" IN ACCELERATOR " + getAccelerator();
@@ -372,6 +380,14 @@ public class CreateTable {
         if(!getErrorIndicator())
             setDatabaseSchema(result);
 
+        result =getProperty(Constants.CONNECTION_PROPERTIES, getDatabaseConnection() +".databasename", false);
+        if(!getErrorIndicator())
+            setDatabaseName(result);
+
+        result =getProperty(Constants.CONNECTION_PROPERTIES, getDatabaseConnection() +".accelerator", false);
+        if(!getErrorIndicator())
+            setAccelerator(result);
+
         log(myName, Constants.INFO, myArea, "databaseType ..........>" + getDatabaseType() + "<.");
         log(myName, Constants.INFO, myArea, "databaseConnection ....>" + getDatabaseConnection() + "<.");
         log(myName, Constants.INFO, myArea, "databaseDriver ........>" + getDatabaseDriver() + "<.");
@@ -379,6 +395,8 @@ public class CreateTable {
         log(myName, Constants.INFO, myArea, "databaseUserId ........>" + getDatabaseUserId() + "<.");
         log(myName, Constants.INFO, myArea, "databaseTableOwner ....>" + getDatabaseTableOwner() + "<.");
         log(myName, Constants.INFO, myArea, "databaseSchema ........>" + getDatabaseSchema() + "<.");
+        log(myName, Constants.INFO, myArea, "databaseName ..........>" + getDatabaseName() + "<.");
+        log(myName, Constants.INFO, myArea, "db2Accelerator ........>" + getAccelerator() + "<.");
         log(myName, Constants.INFO, myArea, "tablePrefix ...........>" + getTableOwnerTablePrefix() + "<.");
         log(myName, Constants.INFO, myArea, "useTablePrefix ........>" + getTableOwnerUseTablePrefix() +"<.");
         if(Constants.FALSE.equalsIgnoreCase(getTableOwnerUseTablePrefix())) {
@@ -754,8 +772,10 @@ public class CreateTable {
                 colDefinitionString=col.getColName() +" ";
                 log(myName, Constants.VERBOSE, myLocation,"Column type is >" +col.getTypeName() +"<.");
                 switch (col.getTypeName()) {
+                    case Constants.COLUMN_DATATYPE_VARCHAR:
                     case Constants.COLUMN_DATATYPE_VARCHAR2:
                     case Constants.COLUMN_DATATYPE_CHAR:
+                    case Constants.COLUMN_DATATYPE_DECIMAL:
                     case Constants.COLUMN_DATATYPE_NUMBER:
                         if(col.getColumnSize()==0) {
                             colDefinitionString += col.getTypeName();
@@ -768,6 +788,7 @@ public class CreateTable {
                                 colDefinitionString+=")";
                         }
                         break;
+                    case Constants.COLUMN_DATATYPE_TIMESTAMP:
                     case Constants.COLUMN_DATATYPE_TIMESTAMP6:
                     case Constants.COLUMN_DATATYPE_TIMESTAMP9:
                     case Constants.COLUMN_DATATYPE_DATE:

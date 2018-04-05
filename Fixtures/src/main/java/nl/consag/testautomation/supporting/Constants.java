@@ -64,9 +64,12 @@ public class Constants {
     ));
 
     //Column types as reported by Oracle - Might need special handling
+    public static final String COLUMN_DATATYPE_VARCHAR="VARCHAR";
     public static final String COLUMN_DATATYPE_VARCHAR2="VARCHAR2";
     public static final String COLUMN_DATATYPE_CHAR="CHAR";
     public static final String COLUMN_DATATYPE_NUMBER="NUMBER";
+    public static final String COLUMN_DATATYPE_DECIMAL="DECIMAL";
+    public static final String COLUMN_DATATYPE_TIMESTAMP ="TIMESTAMP";
     public static final String COLUMN_DATATYPE_TIMESTAMP6="TIMESTAMP(6)";
     public static final String COLUMN_DATATYPE_TIMESTAMP9="TIMESTAMP(9)";
     public static final String COLUMN_DATATYPE_DATE="DATE";
